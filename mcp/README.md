@@ -6,10 +6,10 @@ Shared MCP client config for **Codex**, **Grok**, and **Antigravity (agy) / Gemi
 
 | Variable | Used by | Purpose |
 | -------- | ------- | ------- |
-| `HOMELAB_MCP_API_KEY` | Paperless (mcpo) | `Authorization: Bearer …` client key (`mcp/paperless-mcp-secret` → `API_KEY`) |
-| `PAPERLESS_API_KEY` | Paperless (stdio MCP) | Paperless-NGX token (`mcp/paperless-mcp-secret` → `PAPERLESS_API_TOKEN`) |
+| `HOMELAB_MCP_API_KEY` | Paperless (mcpo) | `Authorization: Bearer â€¦` client key (`mcp/paperless-mcp-secret` â†’ `API_KEY`) |
+| `PAPERLESS_API_KEY` | Paperless (stdio MCP) | Paperless-NGX token (`mcp/paperless-mcp-secret` → `PAPERLESS_API_TOKEN`); used by `npx @baruchiro/paperless-mcp` (Grok) |
 
-Immich MCP has **no edge API key** (LAN/Tailscale allowlist only). Prefer a **read-only** Immich API key in the cluster.
+Immich MCP has **no edge API key** (LAN/Tailscale allowlist only). Prefer a **read-only** Immich API key in the cluster (`mcp/immich-mcp-secret` â†’ `IMMICH_API_KEY`).
 
 ## Secret load precedence (fail-loud)
 
@@ -20,15 +20,15 @@ Profile snippets (`shell/homelab-mcp.env.sh`, `shell/homelab-mcp.ps1`) and the s
 | 1 | **Process env** | Already exported in this shell / agent process |
 | 2 | **User env** (Windows) | `[Environment]::GetEnvironmentVariable(..., 'User')` |
 | 3 | **kubectl secret** | Live `mcp/paperless-mcp-secret`; **refreshes** local cache (+ User env on Windows) |
-| 4 | **Cache file** | `~/.config/homelab/mcp-api-key` or `paperless-api-key` — **offline fallback only** |
+| 4 | **Cache file** | `~/.config/homelab/mcp-api-key` or `paperless-api-key` â€” **offline fallback only** |
 
-**Why kubectl before cache:** a stale cache file used to win silently when it still contained a rotated/dead API key, so MCP looked “configured” while every call failed. Live cluster secrets now outrank the cache whenever `kubectl` can read them.
+**Why kubectl before cache:** a stale cache file used to win silently when it still contained a rotated/dead API key, so MCP looked â€œconfiguredâ€ while every call failed. Live cluster secrets now outrank the cache whenever `kubectl` can read them.
 
 **Fail-loud behavior:**
 
-- Missing key after all sources → warning on stderr / `Write-Warning` (not a silent no-op).
-- Cache used while kubectl is missing or returned empty → warning that the key may be stale.
-- Cache that differs from kubectl → refresh cache from cluster and warn.
+- Missing key after all sources â†’ warning on stderr / `Write-Warning` (not a silent no-op).
+- Cache used while kubectl is missing or returned empty â†’ warning that the key may be stale.
+- Cache that differs from kubectl â†’ refresh cache from cluster and warn.
 
 **Optional lightweight probe** (disabled by default so interactive shells stay fast):
 
@@ -48,9 +48,46 @@ When probe is on, a rejected candidate is skipped and the next source is tried (
 | Paperless (native MCP) | **stdio** `npx @baruchiro/paperless-mcp` | `${PAPERLESS_API_KEY}` (Grok / real MCP clients) |
 | Immich | `http://immich-mcp.archer.casa/mcp` | none (LAN/Tailscale allowlist) |
 
-> **Grok note:** Cluster `paperless-mcp` is **mcpo** (MCP→OpenAPI). Grok speaks streamable HTTP MCP, so Paperless is installed as **stdio** `npx`. Immich is native HTTP MCP. If `immich-mcp.archer.casa` does not resolve, install falls back to Traefik’s Tailscale IP + `Host` header.
+> **Grok note:** Cluster `paperless-mcp` is **mcpo** (MCPâ†’OpenAPI). Grok speaks streamable HTTP MCP, so Paperless is installed as **stdio** `npx`. Immich is native HTTP MCP. If `immich-mcp.archer.casa` does not resolve, install falls back to Traefikâ€™s Tailscale IP + `Host` header (`HOMELAB_TRAEFIK_TS_IP`, default `100.68.151.94`).
 
 See also `home` repo `docs/mcp-catalog.md`.
+
+## Immich LAN / Tailscale allowlist
+
+Immich MCP is **allowlist-only at the HTTP edge** (no Bearer / API key on ingress). Cluster middleware `immich-mcp-local-allowlist` permits:
+
+| CIDR | Meaning |
+| ---- | ------- |
+| `192.168.0.0/16` | Home LAN |
+| `100.64.0.0/10` | Tailscale CGNAT range |
+| `127.0.0.1/32` | Loopback |
+
+**Expectations:**
+
+1. Client must be on **home LAN** or **Tailscale** (or loopback).
+2. Hostname `immich-mcp.archer.casa` must resolve (AdGuard rewrite, `/etc/hosts` via `setup_agents.sh`, or MagicDNS).
+3. Do **not** attach Immich MCP to a public Traefik entrypoint without additional auth.
+4. Prefer a **read-only** Immich user API key in Vaultwarden / `mcp/immich-mcp-secret` (used only inside the pod).
+
+Optional env for install/validate when DNS is broken:
+
+| Variable | Purpose |
+| -------- | ------- |
+| `HOMELAB_TRAEFIK_TS_IP` | Traefik Tailscale VIP used as Immich URL fallback + `Host: immich-mcp.archer.casa` |
+
+### Immich failure modes (actionable)
+
+| Symptom | Likely cause | What to do |
+| ------- | ------------ | ---------- |
+| DNS resolve failed | No rewrite / hosts / MagicDNS | Re-run `setup_agents.sh` hosts block, or set AdGuard; or use `HOMELAB_TRAEFIK_TS_IP` |
+| Connect / HTTP **timeout** (5s) | Not on LAN/TS, broken route, or edge down | Join Tailscale or LAN; check Traefik; **do not wait on MCP handshake** |
+| HTTP **403** | Source IP outside allowlist | Use Tailscale IP or home LAN; do not expose publicly |
+| Connection **refused** | Traefik / `immich-mcp` down | `kubectl -n mcp get deploy,po,svc,ingress -l app=immich-mcp` |
+| In-cluster `/health` OK, client fail | Host DNS/routing only | Fix DNS or VIP+Host fallback; re-install MCP clients |
+| MCP client **silent hang** | Streamable-HTTP handshake to unreachable URL | Run validate first (timed probe); fragments set `startup_timeout_sec` / `timeout` |
+
+Health path (no MCP handshake): `GET http://immich-mcp.archer.casa/health`  
+MCP path (clients): `http://immich-mcp.archer.casa/mcp`
 
 ## One-time secret bootstrap (local machine only)
 
@@ -98,19 +135,43 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-homelab-mcp.ps1 -Load
 
 Or manually apply the fragments under `mcp/fragments/`.
 
-**Validate (no secrets printed):**
+Bootstrap registers **Immich alongside Paperless** for:
+
+| Client | Immich transport | Notes |
+| ------ | ---------------- | ----- |
+| Codex | HTTP URL `/mcp` | `startup_timeout_sec = 30` in fragment |
+| Grok | HTTP URL `/mcp` | DNS fallback â†’ VIP + `Host` header |
+| Gemini / Antigravity | HTTP URL `/mcp` | `timeout: 30000` ms in JSON fragments |
+
+**Validate (no secrets printed; timed Immich probe):**
 
 ```powershell
 # Local end-state: agents, env hooks, MCP config (Windows)
 powershell -ExecutionPolicy Bypass -File .\scripts\test-windows-bootstrap-endstate.ps1
 
-# Full MCP smoke (includes end-state + optional cluster probes)
+# Full MCP smoke (Immich /health probe, default 5s timeout, fails fast with remediation)
 powershell -ExecutionPolicy Bypass -File .\scripts\validate-homelab-mcp.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\validate-homelab-mcp.ps1 -TimeoutSec 5 -SkipCluster
 ```
 
 Partial installs exit non-zero with the missing step. Re-run
 `setup_agents.ps1` / `install-homelab-mcp.ps1` (idempotent). Details:
 [docs/windows-bootstrap.md](../docs/windows-bootstrap.md).
+
+```bash
+# Linux / macOS / WSL
+chmod +x scripts/validate-homelab-mcp.sh
+./scripts/validate-homelab-mcp.sh
+./scripts/validate-homelab-mcp.sh --timeout 5 --skip-cluster
+```
+
+Validate checks:
+
+1. Client config presence (Codex / Grok / Gemini / Antigravity) for **paperless + immich**
+2. Env key presence (lengths only)
+3. **Client-side Immich `/health` + `/mcp` reachability** with a short timeout (no MCP initialize handshake)
+4. Optional in-cluster `kubectl exec … /health` and Paperless Bearer smoke
+5. Local config secret-leak scan
 
 ## Fragments
 
@@ -118,9 +179,9 @@ Partial installs exit non-zero with the missing step. Re-run
 | ---- | ------ |
 | `fragments/codex.homelab-mcp.toml` | Append / merge into `~/.codex/config.toml` |
 | `fragments/grok.homelab-mcp.toml` | Merge into `~/.grok/config.toml` |
-| `fragments/gemini.mcpServers.json` | Merge into `~/.gemini/settings.json` → `mcpServers` |
+| `fragments/gemini.mcpServers.json` | Merge into `~/.gemini/settings.json` â†’ `mcpServers` |
 | `fragments/antigravity.mcp_config.json` | Merge into `~/.gemini/antigravity/mcp_config.json` |
 
 Codex uses `bearer_token_env_var` so the token never appears in the TOML file.
-Grok uses `${HOMELAB_MCP_API_KEY}` expansion in headers.
-Gemini / Antigravity use `${HOMELAB_MCP_API_KEY}` in header maps (resolved at runtime by the client).
+Grok Paperless uses `${PAPERLESS_API_KEY}` in stdio env; Immich has no client secret.
+Gemini / Antigravity use `${HOMELAB_MCP_API_KEY}` in Paperless header maps (resolved at runtime by the client).
