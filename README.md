@@ -32,7 +32,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\validate-homelab-mcp.ps1
 This:
 
 1. Syncs agent/skill trees into `~/.codex`, `~/.claude`, `~/.gemini`
-2. Installs PowerShell profile hooks that load `HOMELAB_MCP_API_KEY` and `PAPERLESS_API_KEY` (from User env, cache file, or kubectl)
+2. Installs PowerShell profile hooks that load `HOMELAB_MCP_API_KEY` and `PAPERLESS_API_KEY` (precedence: process → user → **kubectl** → cache; fail-loud, see [mcp/README.md](mcp/README.md))
 3. Registers Paperless + Immich MCP for **Codex**, **Grok**, and **Antigravity (agy) / Gemini**
 
 ### Linux / macOS / WSL
