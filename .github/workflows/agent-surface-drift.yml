@@ -1,0 +1,36 @@
+# Slim CI for agent surface integrity (Codex → Grok / Antigravity).
+# Copied monorepo workflows under .github/workflows/ are not used for this check.
+name: Agent Surface Drift
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: agent-surface-drift-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  surface-drift:
+    name: sync_agent_surfaces --check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check generated agent surfaces for drift
+        run: python scripts/sync_agent_surfaces.py --check
+
+      - name: Unit tests (model mapping + orchestrator)
+        run: python -m unittest discover -s scripts/tests -v

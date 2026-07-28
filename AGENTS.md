@@ -1,6 +1,6 @@
-# Agent Architecture and Delegation
+﻿# Agent Architecture and Delegation
 
-This repository defines the agent role maps and provides capabilities for delegating repository work from Codex to external agent runtimes—specifically **Grok Build** (`grok` CLI) and **Antigravity** (`agy` CLI).
+This repository defines the agent role maps and provides capabilities for delegating repository work from Codex to external agent runtimesâ€”specifically **Grok Build** (`grok` CLI) and **Antigravity** (`agy` CLI).
 
 For operational details and setup, see [Grok/Antigravity Delegation Guide](docs/grok-agy-delegation.md).
 
@@ -49,8 +49,13 @@ python3 scripts/sync_agent_surfaces.py --prune   # also delete stale generated s
 delete** a Codex agent under `.codex/agents/`, old files can remain in
 `.grok/roles/`, `.grok/agents/`, and `.agents/plugins/home-codex-agents/agents/`.
 Sync reports those orphans and only removes them when you pass **`--prune`**.
-Review the listed paths before pruning—`--prune` is destructive for unmatched
+Review the listed paths before pruning — `--prune` is destructive for unmatched
 generated surfaces only (not for hand-authored Codex sources).
+
+CI enforces the same check via `.github/workflows/agent-surface-drift.yml`
+(on PRs and pushes to `master`/`main`). After editing `.codex/agents/*.agent.md`,
+run the sync script, commit the regenerated `.grok/` and
+`.agents/plugins/home-codex-agents/` trees, and push — do not hand-edit generated files.
 
 ---
 
@@ -122,21 +127,21 @@ Coordinated multi-agent execution generates a run directory under `.agent-runs/<
 
 ```
 .agent-runs/<run-id>/
-├── plan.json                # Copy of the input orchestrator plan
-├── run.json                 # Reconciled execution manifest (status, exit codes, file paths)
-├── tasks/
-│   ├── <task-id-1>/
-│   │   ├── prompt.txt       # Combined worker system prompt and context
-│   │   ├── output.txt       # Worker stdout (durable handoff)
-│   │   └── stderr.txt       # Worker stderr logs
-│   └── <task-id-2>/
-│       ├── prompt.txt
-│       ├── output.txt
-│       └── stderr.txt
-└── manager/
-    ├── prompt.txt           # Manager reconciliation instruction
-    ├── output.txt           # Final manager summary
-    └── stderr.txt           # Manager CLI error logs
+â”œâ”€â”€ plan.json                # Copy of the input orchestrator plan
+â”œâ”€â”€ run.json                 # Reconciled execution manifest (status, exit codes, file paths)
+â”œâ”€â”€ tasks/
+â”‚   â”œâ”€â”€ <task-id-1>/
+â”‚   â”‚   â”œâ”€â”€ prompt.txt       # Combined worker system prompt and context
+â”‚   â”‚   â”œâ”€â”€ output.txt       # Worker stdout (durable handoff)
+â”‚   â”‚   â””â”€â”€ stderr.txt       # Worker stderr logs
+â”‚   â””â”€â”€ <task-id-2>/
+â”‚       â”œâ”€â”€ prompt.txt
+â”‚       â”œâ”€â”€ output.txt
+â”‚       â””â”€â”€ stderr.txt
+â””â”€â”€ manager/
+    â”œâ”€â”€ prompt.txt           # Manager reconciliation instruction
+    â”œâ”€â”€ output.txt           # Final manager summary
+    â””â”€â”€ stderr.txt           # Manager CLI error logs
 ```
 
 ### 4. Cross-Provider Communication Protocol

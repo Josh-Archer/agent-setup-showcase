@@ -211,7 +211,26 @@ python3 .codex/skills/grok-agy-delegate/scripts/orchestrate.py \
   --cwd "$PWD" --dry-run
 ```
 
-This showcase repository’s copied `.github/workflows/` trees target a larger home monorepo and are not the primary CI for these agent surfaces. Prefer the local checks above until a slim agent-only workflow is added on purpose.
+### CI (agent surface drift)
+
+GitHub Actions workflow [`.github/workflows/agent-surface-drift.yml`](../.github/workflows/agent-surface-drift.yml)
+runs on every pull request and push to `master`/`main`:
+
+1. `python scripts/sync_agent_surfaces.py --check` — fails on model-equivalence drift, missing role files, or content mismatch vs regenerated output from `.codex/agents`.
+2. `python -m unittest discover -s scripts/tests -v` — model mapping tiers and orchestrator dependency policy.
+
+Other workflows under `.github/workflows/` may be copied from the larger home monorepo and are not required for agent-surface integrity.
+
+### Refreshing generated surfaces from source
+
+Edit only `.codex/agents/*.agent.md`, then regenerate and commit:
+
+```bash
+python3 scripts/sync_agent_surfaces.py          # rewrite .grok/ + .agents/plugins/home-codex-agents/
+python3 scripts/sync_agent_surfaces.py --check   # must exit 0 before push
+```
+
+Do not hand-edit generated files under `.grok/` or `.agents/plugins/home-codex-agents/`.
 
 ### The Manifest (`run.json`)
 At the end of an execution, a manifest JSON file is written to `.agent-runs/<run-id>/run.json` containing the metadata for audits:

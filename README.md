@@ -1,15 +1,15 @@
-# Agent Setup Showcase
+﻿# Agent Setup Showcase
 
 Sanitized snapshot of agent-related configuration folders (from `origin/main` of the homelab workspace):
 
-- `.codex` — Codex agents + skills
-- `.gemini` — Gemini / Antigravity agents + skills
-- `.github` — GitHub agent definitions + workflows
-- `.claude` — Claude Code agents
-- `.grok` — Grok agents + roles
-- `mcp/` — Homelab MCP client fragments (Paperless + Immich)
-- `shell/` — Shell profile snippets (zsh/bash + PowerShell)
-- `scripts/` — Bootstrap + validate + agent surface sync
+- `.codex` â€” Codex agents + skills
+- `.gemini` â€” Gemini / Antigravity agents + skills
+- `.github` â€” GitHub agent definitions + workflows
+- `.claude` â€” Claude Code agents
+- `.grok` â€” Grok agents + roles
+- `mcp/` â€” Homelab MCP client fragments (Paperless + Immich)
+- `shell/` â€” Shell profile snippets (zsh/bash + PowerShell)
+- `scripts/` â€” Bootstrap + validate + agent surface sync
 
 ## Notes
 
@@ -35,7 +35,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\validate-homelab-mcp.ps1
 This:
 
 1. Syncs agent/skill trees into `~/.codex`, `~/.claude`, `~/.gemini`
-2. Installs PowerShell profile hooks that load `HOMELAB_MCP_API_KEY` and `PAPERLESS_API_KEY` (precedence: process → user → **kubectl** → cache; fail-loud, see [mcp/README.md](mcp/README.md))
+2. Installs PowerShell profile hooks that load `HOMELAB_MCP_API_KEY` and `PAPERLESS_API_KEY` (precedence: process â†’ user â†’ **kubectl** â†’ cache; fail-loud, see [mcp/README.md](mcp/README.md))
 3. Registers Paperless + Immich MCP for **Codex**, **Grok**, and **Antigravity (agy) / Gemini**
 4. Validates end-state and fails the bootstrap if anything is only half-installed
 
@@ -75,8 +75,8 @@ Fragments live under `mcp/fragments/`. See [mcp/README.md](mcp/README.md).
 
 The repository includes a Codex skill for delegating work to Grok Build and Antigravity (`agy`), including dependency-aware multi-agent plans.
 
-- [Agent Architecture map](AGENTS.md) — canonical roles and model equivalences
-- [Grok & Antigravity Delegation Guide](docs/grok-agy-delegation.md) — setup, CLI examples, plan schema
+- [Agent Architecture map](AGENTS.md) â€” canonical roles and model equivalences
+- [Grok & Antigravity Delegation Guide](docs/grok-agy-delegation.md) â€” setup, CLI examples, plan schema
 
 ### Install delegation globally
 
@@ -98,6 +98,32 @@ renaming or deleting Codex agents, re-run with `--prune` only when you intend
 to remove stale generated Grok/Antigravity surfaces. See
 [docs/grok-agy-delegation.md](docs/grok-agy-delegation.md#stale-surfaces-after-rename-or-delete).
 
-## Update source
+CI runs the same checks on every PR and push to `master` via
+[`.github/workflows/agent-surface-drift.yml`](.github/workflows/agent-surface-drift.yml).
+Drift in model equivalence, missing role files, or content mismatch fails the job.
 
-Refresh agent snapshots from `C:\Code\agent-setup-main` (or the homelab `home` repo agent trees) and re-run setup.
+## Update source / refresh snapshots
+
+Canonical roles live under `.codex/agents/*.agent.md`. Generated surfaces under
+`.grok/` and `.agents/plugins/home-codex-agents/` must not be hand-edited.
+
+To regenerate committed snapshots after editing Codex agents:
+
+```bash
+# From this repository root
+python3 scripts/sync_agent_surfaces.py
+python3 scripts/sync_agent_surfaces.py --check
+python3 -m unittest discover -s scripts/tests -v
+git add .grok .agents/plugins/home-codex-agents
+git commit -m "chore(agents): regenerate surfaces from Codex agents"
+```
+
+To refresh the whole agent snapshot tree from the homelab source (when
+re-exporting this showcase):
+
+1. Copy/update agent trees from the home monorepo (or `C:\Code\agent-setup-main`)
+   â€” typically `.codex/`, `.claude/`, `.gemini/`, `.grok/`, `.agents/`.
+2. Ensure canonical roles are correct under `.codex/agents/`.
+3. Run `python3 scripts/sync_agent_surfaces.py` so Grok/agy surfaces match.
+4. Re-run setup scripts (`scripts/setup_agents.ps1` / `scripts/setup_agents.sh`)
+   on machines that install into `~/.codex`, `~/.claude`, etc.
