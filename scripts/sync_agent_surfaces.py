@@ -68,8 +68,105 @@ def agy_tools(tools: str) -> str:
     return "[" + ", ".join(mapped) + "]"
 
 
-def write_surfaces(root: Path) -> int:
-    """Write generated Grok and Antigravity surfaces under root. Returns agent count."""
+def source_agent_names(root: Path) -> set[str]:
+    """Canonical role names from `.codex/agents/*.agent.md`."""
+    source_dir = root / ".codex" / "agents"
+    if not source_dir.is_dir():
+        return set()
+    return {path.name.removesuffix(".agent.md") for path in source_dir.glob("*.agent.md")}
+
+
+def expected_surface_files(root: Path, names: set[str] | None = None) -> set[Path]:
+    """Absolute paths that sync should keep for the given role names."""
+    if names is None:
+        names = source_agent_names(root)
+    paths: set[Path] = set()
+    for name in names:
+        paths.add(root / ".grok" / "roles" / f"{name}.toml")
+        paths.add(root / ".grok" / "agents" / f"{name}.md")
+        paths.add(root / ".agents" / "plugins" / "home-codex-agents" / "agents" / f"{name}.md")
+    return paths
+
+
+def find_orphan_surfaces(root: Path) -> list[Path]:
+    """
+    Return generated agent surface files that no longer map to a Codex agent.
+
+    Only considers files with the shapes sync writes:
+    - `.grok/roles/<role>.toml`
+    - `.grok/agents/<role>.md`
+    - `.agents/plugins/home-codex-agents/agents/<role>.md`
+
+    Non-matching files (e.g. plugin.json, rules/*) are left alone.
+    """
+    expected = expected_surface_files(root)
+    orphans: list[Path] = []
+
+    role_dir = root / ".grok" / "roles"
+    if role_dir.is_dir():
+        for path in sorted(role_dir.glob("*.toml")):
+            if path not in expected:
+                orphans.append(path)
+
+    grok_agent_dir = root / ".grok" / "agents"
+    if grok_agent_dir.is_dir():
+        for path in sorted(grok_agent_dir.glob("*.md")):
+            if path not in expected:
+                orphans.append(path)
+
+    agy_agent_dir = root / ".agents" / "plugins" / "home-codex-agents" / "agents"
+    if agy_agent_dir.is_dir():
+        for path in sorted(agy_agent_dir.glob("*.md")):
+            if path not in expected:
+                orphans.append(path)
+
+    return orphans
+
+
+def prune_orphan_surfaces(orphans: list[Path], *, dry_run: bool = False) -> list[Path]:
+    """Delete orphan surface files. Returns paths that were (or would be) removed."""
+    removed: list[Path] = []
+    for path in orphans:
+        if dry_run:
+            removed.append(path)
+            continue
+        if path.is_file() or path.is_symlink():
+            path.unlink()
+            removed.append(path)
+    return removed
+
+
+def _rel_to_root(path: Path, root: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(root.resolve()))
+    except ValueError:
+        return str(path)
+
+
+def report_orphans(orphans: list[Path], root: Path, *, pruned: bool) -> None:
+    if not orphans:
+        return
+    rel = [_rel_to_root(path, root) for path in orphans]
+    if pruned:
+        print(f"Pruned {len(orphans)} stale generated surface(s):")
+        for item in rel:
+            print(f"  - removed {item}")
+        return
+    print(f"WARNING: {len(orphans)} stale generated surface(s) left in place (safe mode).")
+    print("These usually remain after renaming or deleting a Codex agent.")
+    for item in rel:
+        print(f"  - orphan: {item}")
+    print("Re-run with --prune to delete them explicitly (destructive).")
+    print("  python3 scripts/sync_agent_surfaces.py --prune")
+
+
+def write_surfaces(root: Path, *, prune: bool = False) -> tuple[int, list[Path]]:
+    """
+    Write generated Grok and Antigravity surfaces under root.
+
+    Returns (agent_count, orphans_after_write). When prune=True, orphans are deleted
+    before returning (list is the set that was removed).
+    """
     source_dir = root / ".codex" / "agents"
     grok_dir = root / ".grok" / "roles"
     grok_agent_dir = root / ".grok" / "agents"
@@ -149,7 +246,8 @@ def write_surfaces(root: Path) -> int:
         "- Cross-provider contract: repository root `AGENTS.md`\n"
         "- Operational guide: `docs/grok-agy-delegation.md`\n"
         "- Regenerate Grok/agy surfaces: `python3 scripts/sync_agent_surfaces.py`\n"
-        "- Drift check: `python3 scripts/sync_agent_surfaces.py --check`\n\n"
+        "- Drift check: `python3 scripts/sync_agent_surfaces.py --check`\n"
+        "- Prune stale surfaces after rename/delete: `python3 scripts/sync_agent_surfaces.py --prune`\n\n"
         "## Delegation handoffs\n\n"
         "- Single-agent wrapper: `.codex/skills/grok-agy-delegate/scripts/delegate.py`\n"
         "- Plan orchestrator: `.codex/skills/grok-agy-delegate/scripts/orchestrate.py`\n"
@@ -160,8 +258,14 @@ def write_surfaces(root: Path) -> int:
         "- Prefer read-only roles for analysis-only work\n"
         "- Inspect `git diff` before treating delegated edits as accepted\n"
         "- Ensure Git commit GPG/SSH signing is enabled using the default global signing key (e.g. from Bitwarden/ssh-agent), and your SSH agent/Bitwarden vault is unlocked when tasks are running so commits can be signed successfully.\n"
+        "- `--prune` deletes generated surface files that no longer map to a Codex agent; "
+        "default sync never deletes without that flag.\n"
     )
-    return len(agents)
+
+    orphans = find_orphan_surfaces(root)
+    if prune and orphans:
+        prune_orphan_surfaces(orphans)
+    return len(agents), orphans
 
 
 def _generated_trees(root: Path) -> list[Path]:
@@ -180,7 +284,7 @@ def check_surfaces() -> int:
         dest_source = tmp_root / ".codex" / "agents"
         dest_source.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(SOURCE_DIR, dest_source)
-        write_surfaces(tmp_root)
+        write_surfaces(tmp_root, prune=True)
 
         mismatches: list[str] = []
         for rel_root in _generated_trees(ROOT):
@@ -199,6 +303,7 @@ def check_surfaces() -> int:
             for item in mismatches:
                 print(f"  - {item}")
             print("Run: python3 scripts/sync_agent_surfaces.py")
+            print("If rename/delete left stale files: python3 scripts/sync_agent_surfaces.py --prune")
             return 1
         print("Generated agent surfaces match .codex/agents")
         return 0
@@ -224,18 +329,30 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Exit non-zero if generated Grok/Antigravity surfaces drift from .codex/agents",
     )
+    parser.add_argument(
+        "--prune",
+        action="store_true",
+        help=(
+            "After regenerating surfaces, delete stale generated agent files that no longer "
+            "map to a Codex agent (rename/delete orphans). Default is safe: report only, no deletes."
+        ),
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     if args.check:
+        if args.prune:
+            print("error: --check is read-only; omit --prune (use plain --prune to delete orphans)")
+            return 2
         return check_surfaces()
 
-    count = write_surfaces(ROOT)
+    count, orphans = write_surfaces(ROOT, prune=args.prune)
     print(f"Generated {count} Grok roles in {GROK_DIR}")
     print(f"Generated {count} Grok agents in {GROK_AGENT_DIR}")
     print(f"Generated {count} Antigravity agents in {AGY_PLUGIN_DIR}")
+    report_orphans(orphans, ROOT, pruned=args.prune)
     return 0
 
 

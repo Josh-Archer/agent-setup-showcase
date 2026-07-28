@@ -87,6 +87,11 @@ python3 scripts/sync_agent_surfaces.py --check
 python3 -m unittest discover -s scripts/tests -v
 ```
 
+Default `scripts/sync_agent_surfaces.py` is **safe** (no deletes). After
+renaming or deleting Codex agents, re-run with `--prune` only when you intend
+to remove stale generated Grok/Antigravity surfaces. See
+[docs/grok-agy-delegation.md](docs/grok-agy-delegation.md#stale-surfaces-after-rename-or-delete).
+
 ## Update source
 
 Refresh agent snapshots from `C:\Code\agent-setup-main` (or the homelab `home` repo agent trees) and re-run setup.

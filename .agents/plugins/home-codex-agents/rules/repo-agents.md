@@ -9,6 +9,7 @@ Antigravity does not auto-load the repository root `AGENTS.md`. Use this rule to
 - Operational guide: `docs/grok-agy-delegation.md`
 - Regenerate Grok/agy surfaces: `python3 scripts/sync_agent_surfaces.py`
 - Drift check: `python3 scripts/sync_agent_surfaces.py --check`
+- Prune stale surfaces after rename/delete: `python3 scripts/sync_agent_surfaces.py --prune`
 
 ## Delegation handoffs
 
@@ -23,3 +24,4 @@ Antigravity does not auto-load the repository root `AGENTS.md`. Use this rule to
 - Prefer read-only roles for analysis-only work
 - Inspect `git diff` before treating delegated edits as accepted
 - Ensure Git commit GPG/SSH signing is enabled using the default global signing key (e.g. from Bitwarden/ssh-agent), and your SSH agent/Bitwarden vault is unlocked when tasks are running so commits can be signed successfully.
+- `--prune` deletes generated surface files that no longer map to a Codex agent; default sync never deletes without that flag.
