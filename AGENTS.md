@@ -42,7 +42,15 @@ root `AGENTS.md`, and regenerate the plugin after role changes.
 ```bash
 python3 scripts/sync_agent_surfaces.py
 python3 scripts/sync_agent_surfaces.py --check   # exit non-zero if generated trees drift
+python3 scripts/sync_agent_surfaces.py --prune   # also delete stale generated surfaces
 ```
+
+**Prune warning:** default sync is safe and never deletes. After you **rename or
+delete** a Codex agent under `.codex/agents/`, old files can remain in
+`.grok/roles/`, `.grok/agents/`, and `.agents/plugins/home-codex-agents/agents/`.
+Sync reports those orphans and only removes them when you pass **`--prune`**.
+Review the listed paths before pruning—`--prune` is destructive for unmatched
+generated surfaces only (not for hand-authored Codex sources).
 
 ---
 

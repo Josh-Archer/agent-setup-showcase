@@ -31,6 +31,25 @@ After editing canonical agents, regenerate surfaces before committing. To fail w
 python3 scripts/sync_agent_surfaces.py --check
 ```
 
+#### Stale surfaces after rename or delete
+
+Default sync **writes/updates only** and never deletes generated files. If you
+rename or remove a role under `.codex/agents/`, old Grok/agy surface files can
+remain as orphans. Sync lists them and suggests an explicit prune:
+
+```bash
+# Safe: regenerate + report orphans (no deletes)
+python3 scripts/sync_agent_surfaces.py
+
+# Destructive: regenerate and delete unmatched generated surfaces
+python3 scripts/sync_agent_surfaces.py --prune
+```
+
+**Warning:** `--prune` deletes generated files that no longer map to a Codex
+agent (`.grok/roles/*.toml`, `.grok/agents/*.md`, plugin `agents/*.md`). It does
+not touch `.codex/agents/` sources. Prefer inspecting the orphan list from a
+safe run before pruning.
+
 ### 3. Layered `AGENTS.md` and Grok `agents_md`
 | Layer | Path | Notes |
 | :--- | :--- | :--- |

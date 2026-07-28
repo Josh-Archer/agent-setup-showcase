@@ -174,6 +174,109 @@ class SyncSurfaceTests(unittest.TestCase):
         self.assertEqual(meta["model"], "gpt-5.4")
         self.assertTrue(body.startswith("Hello"))
 
+    def _seed_agent(self, root: Path, name: str, body: str = "Role body.\n") -> None:
+        agents = root / ".codex" / "agents"
+        agents.mkdir(parents=True, exist_ok=True)
+        (agents / f"{name}.agent.md").write_text(
+            f"---\nname: {name}\ndescription: {name} role\nmodel: gpt-5.6-sol\n"
+            f"reasoning_effort: medium\ntools: [read, edit]\n---\n{body}"
+        )
+
+    def _surface_paths(self, root: Path, name: str) -> list[Path]:
+        return [
+            root / ".grok" / "roles" / f"{name}.toml",
+            root / ".grok" / "agents" / f"{name}.md",
+            root / ".agents" / "plugins" / "home-codex-agents" / "agents" / f"{name}.md",
+        ]
+
+    def test_delete_leaves_orphans_without_prune(self) -> None:
+        """Deleting a Codex agent leaves generated surfaces until --prune."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._seed_agent(root, "alpha")
+            self._seed_agent(root, "beta")
+            count, orphans = self.sync.write_surfaces(root, prune=False)
+            self.assertEqual(count, 2)
+            self.assertEqual(orphans, [])
+            for path in self._surface_paths(root, "alpha") + self._surface_paths(root, "beta"):
+                self.assertTrue(path.is_file(), path)
+
+            # Delete beta from source only; regenerate without prune.
+            (root / ".codex" / "agents" / "beta.agent.md").unlink()
+            count, orphans = self.sync.write_surfaces(root, prune=False)
+            self.assertEqual(count, 1)
+            orphan_names = {p.name for p in orphans}
+            self.assertEqual(orphan_names, {"beta.toml", "beta.md"})
+            self.assertEqual(len(orphans), 3)
+            self.assertTrue(any(p.as_posix().endswith(".grok/roles/beta.toml") for p in orphans))
+            self.assertTrue(any(p.as_posix().endswith(".grok/agents/beta.md") for p in orphans))
+            self.assertTrue(
+                any(p.as_posix().endswith("home-codex-agents/agents/beta.md") for p in orphans)
+            )
+            for path in self._surface_paths(root, "beta"):
+                self.assertTrue(path.is_file(), f"safe mode must keep {path}")
+            for path in self._surface_paths(root, "alpha"):
+                self.assertTrue(path.is_file(), path)
+
+    def test_delete_prune_removes_orphans(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._seed_agent(root, "keep")
+            self._seed_agent(root, "drop")
+            self.sync.write_surfaces(root, prune=False)
+            (root / ".codex" / "agents" / "drop.agent.md").unlink()
+
+            count, orphans = self.sync.write_surfaces(root, prune=True)
+            self.assertEqual(count, 1)
+            self.assertEqual(len(orphans), 3)
+            for path in self._surface_paths(root, "drop"):
+                self.assertFalse(path.exists(), f"prune must remove {path}")
+            for path in self._surface_paths(root, "keep"):
+                self.assertTrue(path.is_file(), path)
+            self.assertEqual(self.sync.find_orphan_surfaces(root), [])
+
+    def test_rename_leaves_old_surfaces_without_prune(self) -> None:
+        """Renaming a Codex agent creates a new surface and leaves the old name as orphans."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._seed_agent(root, "old-name")
+            self.sync.write_surfaces(root, prune=False)
+
+            old = root / ".codex" / "agents" / "old-name.agent.md"
+            new = root / ".codex" / "agents" / "new-name.agent.md"
+            old.rename(new)
+
+            count, orphans = self.sync.write_surfaces(root, prune=False)
+            self.assertEqual(count, 1)
+            self.assertEqual(len(orphans), 3)
+            for path in self._surface_paths(root, "old-name"):
+                self.assertTrue(path.is_file(), f"safe mode keeps renamed orphan {path}")
+            for path in self._surface_paths(root, "new-name"):
+                self.assertTrue(path.is_file(), path)
+
+            # Explicit prune removes only the old name.
+            count, orphans = self.sync.write_surfaces(root, prune=True)
+            self.assertEqual(count, 1)
+            self.assertEqual(len(orphans), 3)
+            for path in self._surface_paths(root, "old-name"):
+                self.assertFalse(path.exists(), path)
+            for path in self._surface_paths(root, "new-name"):
+                self.assertTrue(path.is_file(), path)
+
+    def test_find_orphan_surfaces_ignores_rules_and_plugin_meta(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._seed_agent(root, "solo")
+            self.sync.write_surfaces(root, prune=False)
+            plugin = root / ".agents" / "plugins" / "home-codex-agents"
+            self.assertTrue((plugin / "plugin.json").is_file())
+            self.assertTrue((plugin / "rules" / "repo-agents.md").is_file())
+            # Extra non-agent files must not be treated as orphans.
+            (plugin / "rules" / "custom-note.md").write_text("keep me\n")
+            (root / ".grok" / "roles" / "README.txt").write_text("not a role\n")
+            orphans = self.sync.find_orphan_surfaces(root)
+            self.assertEqual(orphans, [])
+
 
 class ExamplePlanTests(unittest.TestCase):
     def test_example_plan_is_valid_json(self) -> None:
