@@ -71,8 +71,16 @@ Or manually apply the fragments under `mcp/fragments/`.
 **Validate (no secrets printed):**
 
 ```powershell
+# Local end-state: agents, env hooks, MCP config (Windows)
+powershell -ExecutionPolicy Bypass -File .\scripts\test-windows-bootstrap-endstate.ps1
+
+# Full MCP smoke (includes end-state + optional cluster probes)
 powershell -ExecutionPolicy Bypass -File .\scripts\validate-homelab-mcp.ps1
 ```
+
+Partial installs exit non-zero with the missing step. Re-run
+`setup_agents.ps1` / `install-homelab-mcp.ps1` (idempotent). Details:
+[docs/windows-bootstrap.md](../docs/windows-bootstrap.md).
 
 ## Fragments
 

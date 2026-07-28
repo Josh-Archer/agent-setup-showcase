@@ -11,11 +11,20 @@
 
 .PARAMETER LoadKeyFromCluster
   Pull API key from kubectl secret into User env + local cache file.
+
+.PARAMETER SkipEndStateCheck
+  Skip the mandatory Windows end-state validation at the end of bootstrap.
+  Prefer leaving this off; partial installs should fail non-zero.
+
+.PARAMETER SkipMcpClients
+  Skip MCP client registration (agents + hooks only). End-state MCP checks
+  are skipped when this is set.
 #>
 [CmdletBinding()]
 param(
   [switch]$LoadKeyFromCluster,
-  [switch]$SkipMcpClients
+  [switch]$SkipMcpClients,
+  [switch]$SkipEndStateCheck
 )
 
 $ErrorActionPreference = 'Stop'
@@ -113,16 +122,58 @@ function Refresh-KeyCache {
 }
 
 Write-Log "repo=$RepoRoot"
-Sync-Tree -Src (Join-Path $RepoRoot '.codex\agents') -Dst (Join-Path $env:USERPROFILE '.codex\agents')
-Sync-Tree -Src (Join-Path $RepoRoot '.claude\agents') -Dst (Join-Path $env:USERPROFILE '.claude\agents')
-Sync-Tree -Src (Join-Path $RepoRoot '.gemini\agents') -Dst (Join-Path $env:USERPROFILE '.gemini\agents')
-Sync-Tree -Src (Join-Path $RepoRoot '.gemini\skills') -Dst (Join-Path $env:USERPROFILE '.gemini\skills')
 
-Install-ShellSnippet
-Refresh-KeyCache
+try {
+  Sync-Tree -Src (Join-Path $RepoRoot '.codex\agents') -Dst (Join-Path $env:USERPROFILE '.codex\agents')
+  Sync-Tree -Src (Join-Path $RepoRoot '.claude\agents') -Dst (Join-Path $env:USERPROFILE '.claude\agents')
+  Sync-Tree -Src (Join-Path $RepoRoot '.gemini\agents') -Dst (Join-Path $env:USERPROFILE '.gemini\agents')
+  Sync-Tree -Src (Join-Path $RepoRoot '.gemini\skills') -Dst (Join-Path $env:USERPROFILE '.gemini\skills')
 
-if (-not $SkipMcpClients) {
-  & (Join-Path $RepoRoot 'scripts\install-homelab-mcp.ps1')
+  Install-ShellSnippet
+  Refresh-KeyCache
+
+  if (-not $SkipMcpClients) {
+    & (Join-Path $RepoRoot 'scripts\install-homelab-mcp.ps1')
+    if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+      throw "install-homelab-mcp.ps1 failed with exit code $LASTEXITCODE"
+    }
+  }
+} catch {
+  Write-Host "[setup_agents] ERROR during bootstrap: $_" -ForegroundColor Red
+  Write-Host '[setup_agents] Partial install detected. Re-run after fixing the error (install is idempotent).' -ForegroundColor Yellow
+  Write-Host '[setup_agents] See docs/windows-bootstrap.md' -ForegroundColor Yellow
+  exit 1
+}
+
+if (-not $SkipEndStateCheck) {
+  Write-Log 'validating Windows end-state (agents, env hooks, MCP config)...'
+  $endState = Join-Path $RepoRoot 'scripts\test-windows-bootstrap-endstate.ps1'
+  if (-not (Test-Path -LiteralPath $endState)) {
+    Write-Host "[setup_agents] ERROR: missing end-state script: $endState" -ForegroundColor Red
+    exit 1
+  }
+  # Child process so the validator's `exit` does not abort this script early.
+  if ($SkipMcpClients) {
+    $psArgs = @(
+      '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $endState,
+      '-RepoRoot', $RepoRoot, '-SkipMcpConfig', '-SkipRequireKey'
+    )
+  } else {
+    $psArgs = @(
+      '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $endState,
+      '-RepoRoot', $RepoRoot
+    )
+  }
+  & powershell.exe @psArgs
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host '[setup_agents] End-state validation failed (non-zero). Bootstrap is incomplete.' -ForegroundColor Red
+    Write-Host '[setup_agents] Recovery: re-run this script (idempotent). See docs/windows-bootstrap.md' -ForegroundColor Yellow
+    exit 1
+  }
+  Write-Log 'end-state validation passed'
+} else {
+  Write-Warning 'SkipEndStateCheck set; bootstrap did not verify agents/hooks/MCP end-state'
 }
 
 Write-Log 'done. Open a new terminal and restart Codex / Grok / Antigravity.'
+exit 0

@@ -26,6 +26,9 @@ Same idea as installing agent/skill definitions: run once per machine.
 ```powershell
 cd path\to\agent-setup-showcase
 powershell -ExecutionPolicy Bypass -File .\scripts\setup_agents.ps1 -LoadKeyFromCluster
+# setup_agents.ps1 exits non-zero if end-state is incomplete (agents / hooks / MCP)
+powershell -ExecutionPolicy Bypass -File .\scripts\test-windows-bootstrap-endstate.ps1
+# optional live/cluster smoke:
 powershell -ExecutionPolicy Bypass -File .\scripts\validate-homelab-mcp.ps1
 ```
 
@@ -34,6 +37,9 @@ This:
 1. Syncs agent/skill trees into `~/.codex`, `~/.claude`, `~/.gemini`
 2. Installs PowerShell profile hooks that load `HOMELAB_MCP_API_KEY` and `PAPERLESS_API_KEY` (from User env, cache file, or kubectl)
 3. Registers Paperless + Immich MCP for **Codex**, **Grok**, and **Antigravity (agy) / Gemini**
+4. Validates end-state and fails the bootstrap if anything is only half-installed
+
+**Partial failure / re-run:** install steps are idempotent. Re-run `setup_agents.ps1`, then the end-state script until exit code 0. See [docs/windows-bootstrap.md](docs/windows-bootstrap.md).
 
 ### Linux / macOS / WSL
 
