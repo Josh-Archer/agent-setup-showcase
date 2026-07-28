@@ -18,17 +18,22 @@ command -v agy
 If a CLI is missing or unauthenticated, the delegation scripts will exit immediately with an error rather than falling back silently.
 
 ### 2. Synchronizing Agent Surfaces
-Agent definitions are authored under `.codex/agents/*.agent.md`. To update the provider roles, run the sync script:
+Canonical **model pins** live in [`models/matrix.json`](../models/matrix.json). See [`docs/model-matrix.md`](model-matrix.md) for promoting a new model generation.
+
+Agent definitions are authored under `.codex/agents/*.agent.md`. To update the provider roles after body or model changes, run:
 ```bash
-python3 scripts/sync_agent_surfaces.py
+python scripts/promote_model_matrix.py   # apply matrix pins + regenerate Grok/agy
+# or, body-only regen:
+python scripts/sync_agent_surfaces.py
 ```
-This script generates:
+These scripts generate:
 - `.grok/roles/*.toml` and `.grok/agents/*.md` for Grok (each agent sets `agents_md: true`).
 - `.agents/plugins/home-codex-agents/agents/*.md` plus `rules/model-equivalence.md` and `rules/repo-agents.md` for the Antigravity plugin.
 
-After editing canonical agents, regenerate surfaces before committing. To fail when generated trees drift:
+After editing the matrix or canonical agents, regenerate surfaces before committing. To fail when pins or generated trees drift:
 ```bash
-python3 scripts/sync_agent_surfaces.py --check
+python scripts/promote_model_matrix.py --check
+python scripts/sync_agent_surfaces.py --check
 ```
 
 #### Stale surfaces after rename or delete

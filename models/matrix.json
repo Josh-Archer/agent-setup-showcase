@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "matrix_version": "2026.07.1",
+  "description": "Canonical versioned model pins for Codex, Claude, Gemini, Grok, and Antigravity agent surfaces.",
+  "defaults": {
+    "grok": "grok-4.5",
+    "agy": "Gemini 3.5 Flash (Medium)"
+  },
+  "tiers": {
+    "high": {
+      "grok": "grok-4.5",
+      "agy": "Claude Opus 4.6 (Thinking)",
+      "claude": "claude-opus-4-6",
+      "gemini": "gemini-3.1-pro-preview"
+    },
+    "medium": {
+      "grok": "grok-composer-2.5-fast",
+      "agy": "Gemini 3.5 Flash (Medium)",
+      "claude": "claude-sonnet-4-6",
+      "gemini": "gemini-3.1-pro-preview"
+    },
+    "low": {
+      "grok": "grok-composer-2.5-fast",
+      "agy": "Gemini 3.5 Flash (Low)",
+      "claude": "claude-haiku-4-5-20251001",
+      "gemini": "gemini-3.1-pro-preview"
+    }
+  },
+  "roles": {
+    "architecture": {
+      "codex": "gpt-5.6-sol-xhigh",
+      "tier": "high",
+      "claude": "architecture",
+      "gemini": "architect"
+    },
+    "debugger": {
+      "codex": "gpt-5.6-sol-medium",
+      "tier": "high",
+      "claude": "debugger",
+      "gemini": "debugger"
+    },
+    "development": {
+      "codex": "gpt-5.6-terra-high",
+      "tier": "medium",
+      "claude": "development"
+    },
+    "devops": {
+      "codex": "gpt-5.6-sol",
+      "tier": "high",
+      "claude": "devops",
+      "gemini": "devops"
+    },
+    "devops-subagent": {
+      "codex": "gpt-5.6-sol",
+      "tier": "high"
+    },
+    "docs-scribe": {
+      "codex": "gpt-5.6-luna-high",
+      "tier": "medium",
+      "claude": "docs-scribe",
+      "gemini": "docs-scribe"
+    },
+    "documentation": {
+      "codex": "gpt-5.6-terra",
+      "tier": "medium",
+      "claude": "documentation"
+    },
+    "gitops-architect": {
+      "codex": "gpt-5.6-sol-high",
+      "tier": "high",
+      "claude": "gitops-architect",
+      "gemini": "gitops-architect"
+    },
+    "junior": {
+      "codex": "gpt-5.6-luna-high",
+      "tier": "medium",
+      "gemini": "junior"
+    },
+    "manager": {
+      "codex": "gpt-5.6-sol",
+      "tier": "high",
+      "claude": "manager",
+      "gemini": "manager"
+    },
+    "product-development": {
+      "codex": "gpt-5.6-sol",
+      "tier": "high",
+      "claude": "product-development"
+    },
+    "qa": {
+      "codex": "gpt-5.6-sol-medium",
+      "tier": "high"
+    },
+    "security-auditor": {
+      "codex": "gpt-5.6-sol",
+      "tier": "high",
+      "claude": "security-auditor",
+      "gemini": "security-auditor"
+    },
+    "testing": {
+      "codex": "gpt-5.6-terra",
+      "tier": "medium",
+      "claude": "testing"
+    },
+    "validation-runner": {
+      "codex": "gpt-5.6-luna",
+      "tier": "low",
+      "claude": "validation-runner",
+      "gemini": "validation-runner"
+    }
+  },
+  "extra_pins": {
+    "claude": {
+      "debugger": "claude-sonnet-4-6",
+      "devops": "claude-4.5-sonnet",
+      "docs-scribe": "claude-haiku-4-5-20251001",
+      "testing": "claude-haiku-4-5-20251001",
+      "validation-runner": "claude-sonnet-4-6",
+      "executor": "claude-4.5-sonnet",
+      "planner": "claude-4.5-opus",
+      "reviewer": "claude-4.5-opus",
+      "tester": "claude-4.5-haiku"
+    },
+    "gemini": {
+      "auditor": "gemini-3.1-pro-preview",
+      "tester": "gemini-3.1-pro-preview"
+    }
+  }
+}

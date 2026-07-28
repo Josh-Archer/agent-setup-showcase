@@ -155,7 +155,11 @@ Instead, state and context are handed off strictly through **physical files in t
 5. Finally, the manager agent reads all generated output files to reconcile the final state.
 
 ### 5. Provider and Model Selection
-Provider and model selection can be specified explicitly at the plan or task level. When not overridden, the orchestrator and wrapper apply mappings configured in [.agents/plugins/home-codex-agents/rules/model-equivalence.md](.agents/plugins/home-codex-agents/rules/model-equivalence.md):
+Provider and model selection can be specified explicitly at the plan or task level. When not overridden, the orchestrator and wrapper apply mappings from the canonical matrix [`models/matrix.json`](models/matrix.json) (see [docs/model-matrix.md](docs/model-matrix.md)). Generated equivalence notes live in [.agents/plugins/home-codex-agents/rules/model-equivalence.md](.agents/plugins/home-codex-agents/rules/model-equivalence.md).
+
+Promote a new generation with `python scripts/promote_model_matrix.py` after editing the matrix.
+
+Current tier pins (matrix_version `2026.07.1`):
 
 - **High-Complexity Roles** (e.g., `architecture`, `debugger`):
   - Grok: `grok-4.5`
