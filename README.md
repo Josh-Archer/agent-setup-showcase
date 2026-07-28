@@ -2,14 +2,14 @@
 
 Sanitized snapshot of agent-related configuration folders (from `origin/main` of the homelab workspace):
 
-- `.codex` â€” Codex agents + skills
-- `.gemini` â€” Gemini / Antigravity agents + skills
-- `.github` â€” GitHub agent definitions + workflows
-- `.claude` â€” Claude Code agents
-- `.grok` â€” Grok agents + roles
-- `mcp/` â€” Homelab MCP client fragments (Paperless + Immich)
-- `shell/` â€” Shell profile snippets (zsh/bash + PowerShell)
-- `scripts/` â€” Bootstrap + validate + agent surface sync
+- `.codex` Ã¢â‚¬â€ Codex agents + skills
+- `.gemini` Ã¢â‚¬â€ Gemini / Antigravity agents + skills
+- `.github` Ã¢â‚¬â€ GitHub agent definitions + workflows
+- `.claude` Ã¢â‚¬â€ Claude Code agents
+- `.grok` Ã¢â‚¬â€ Grok agents + roles
+- `mcp/` Ã¢â‚¬â€ Homelab MCP client fragments (Paperless + Immich)
+- `shell/` Ã¢â‚¬â€ Shell profile snippets (zsh/bash + PowerShell)
+- `scripts/` Ã¢â‚¬â€ Bootstrap + validate + agent surface sync
 
 ## Notes
 
@@ -35,7 +35,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\validate-homelab-mcp.ps1
 This:
 
 1. Syncs agent/skill trees into `~/.codex`, `~/.claude`, `~/.gemini`
-2. Installs PowerShell profile hooks that load `HOMELAB_MCP_API_KEY` and `PAPERLESS_API_KEY` (precedence: process â†’ user â†’ **kubectl** â†’ cache; fail-loud, see [mcp/README.md](mcp/README.md))
+2. Installs PowerShell profile hooks that load `HOMELAB_MCP_API_KEY` and `PAPERLESS_API_KEY` (precedence: process Ã¢â€ â€™ user Ã¢â€ â€™ **kubectl** Ã¢â€ â€™ cache; fail-loud, see [mcp/README.md](mcp/README.md))
 3. Registers Paperless + Immich MCP for **Codex**, **Grok**, and **Antigravity (agy) / Gemini**
 4. Validates end-state and fails the bootstrap if anything is only half-installed
 5. Validate probes Immich `/health` with a short timeout (actionable failures; no silent handshake hang)
@@ -77,8 +77,9 @@ Fragments live under `mcp/fragments/`. See [mcp/README.md](mcp/README.md) for **
 
 The repository includes a Codex skill for delegating work to Grok Build and Antigravity (`agy`), including dependency-aware multi-agent plans.
 
-- [Agent Architecture map](AGENTS.md) â€” canonical roles and model equivalences
-- [Grok & Antigravity Delegation Guide](docs/grok-agy-delegation.md) â€” setup, CLI examples, plan schema
+- [Agent Architecture map](AGENTS.md) — canonical roles and model equivalences
+- [Versioned model matrix](docs/model-matrix.md) — promote pins across Codex/Claude/Gemini/Grok
+- [Grok & Antigravity Delegation Guide](docs/grok-agy-delegation.md) — setup, CLI examples, plan schema
 
 ### Install delegation globally
 
@@ -91,14 +92,26 @@ This symlinks surfaces into `~/.codex/skills/`, `~/.grok/`, and `~/.agents/plugi
 ### Local validation for agent surfaces
 
 ```bash
-python3 scripts/sync_agent_surfaces.py --check
-python3 -m unittest discover -s scripts/tests -v
+python scripts/promote_model_matrix.py --check
+python scripts/sync_agent_surfaces.py --check
+python -m unittest discover -s scripts/tests -v
 ```
 
 Default `scripts/sync_agent_surfaces.py` is **safe** (no deletes). After
 renaming or deleting Codex agents, re-run with `--prune` only when you intend
 to remove stale generated Grok/Antigravity surfaces. See
 [docs/grok-agy-delegation.md](docs/grok-agy-delegation.md#stale-surfaces-after-rename-or-delete).
+
+### Promote a new model generation
+
+Edit `models/matrix.json` (bump `matrix_version` and provider pins), then:
+
+```bash
+python scripts/promote_model_matrix.py
+python scripts/promote_model_matrix.py --check
+```
+
+See [docs/model-matrix.md](docs/model-matrix.md).
 
 CI runs the same checks on every PR and push to `master` via
 [`.github/workflows/agent-surface-drift.yml`](.github/workflows/agent-surface-drift.yml).
@@ -124,7 +137,7 @@ To refresh the whole agent snapshot tree from the homelab source (when
 re-exporting this showcase):
 
 1. Copy/update agent trees from the home monorepo (or `C:\Code\agent-setup-main`)
-   â€” typically `.codex/`, `.claude/`, `.gemini/`, `.grok/`, `.agents/`.
+   Ã¢â‚¬â€ typically `.codex/`, `.claude/`, `.gemini/`, `.grok/`, `.agents/`.
 2. Ensure canonical roles are correct under `.codex/agents/`.
 3. Run `python3 scripts/sync_agent_surfaces.py` so Grok/agy surfaces match.
 4. Re-run setup scripts (`scripts/setup_agents.ps1` / `scripts/setup_agents.sh`)

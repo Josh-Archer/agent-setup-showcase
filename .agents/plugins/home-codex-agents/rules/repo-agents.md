@@ -4,11 +4,13 @@ Antigravity does not auto-load the repository root `AGENTS.md`. Use this rule to
 
 ## Source of truth
 
+- Canonical model pins: `models/matrix.json`
 - Canonical roles: `.codex/agents/*.agent.md`
 - Cross-provider contract: repository root `AGENTS.md`
 - Operational guide: `docs/grok-agy-delegation.md`
-- Regenerate Grok/agy surfaces: `python3 scripts/sync_agent_surfaces.py`
-- Drift check: `python3 scripts/sync_agent_surfaces.py --check`
+- Promote model generation: `python scripts/promote_model_matrix.py` (see `docs/model-matrix.md`)
+- Regenerate Grok/agy surfaces: `python scripts/sync_agent_surfaces.py`
+- Drift check: `python scripts/promote_model_matrix.py --check` or `python scripts/sync_agent_surfaces.py --check`
 - Prune stale surfaces after rename/delete: `python3 scripts/sync_agent_surfaces.py --prune`
 
 ## Delegation handoffs

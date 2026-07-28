@@ -152,6 +152,8 @@ class SyncSurfaceTests(unittest.TestCase):
         cls.sync = load_module("sync_under_test", SYNC_PATH)
 
     def test_model_mapping_tiers(self) -> None:
+        self.sync.clear_matrix_cache()
+        # Heuristic path (no role name): still maps legacy and current codex strings.
         self.assertEqual(self.sync.grok_model("gpt-5.4"), "grok-4.5")
         self.assertEqual(self.sync.grok_model("gpt-5.4-mini"), "grok-composer-2.5-fast")
         self.assertEqual(self.sync.grok_model("gpt-5.3-codex-spark"), "grok-composer-2.5-fast")
@@ -162,6 +164,12 @@ class SyncSurfaceTests(unittest.TestCase):
         self.assertEqual(self.sync.agy_model("gpt-5.3-codex-spark"), "Gemini 3.5 Flash (Low)")
         self.assertEqual(self.sync.agy_model("gpt-5.6-terra"), "Gemini 3.5 Flash (Medium)")
         self.assertEqual(self.sync.agy_model("gpt-5.6-luna"), "Gemini 3.5 Flash (Low)")
+        # Matrix path: role tier wins over the codex model string.
+        self.assertEqual(self.sync.grok_model("anything", role="architecture"), "grok-4.5")
+        self.assertEqual(
+            self.sync.agy_model("anything", role="validation-runner"),
+            "Gemini 3.5 Flash (Low)",
+        )
 
     def test_check_surfaces_clean_on_repo(self) -> None:
         # Requires generated trees to already match; run sync in the suite setup path if needed.
