@@ -186,6 +186,8 @@ Re-run with -LoadKeyFromCluster or set the User env var from Vaultwarden/cluster
 
 $names = @('paperless', 'immich')
 
+$immich = Resolve-ImmichMcpUrl
+
 if (-not $SkipCodex) {
   # Prefer CLI when available (writes bearer_token_env_var cleanly)
   if (Get-Command codex -ErrorAction SilentlyContinue) {
@@ -194,12 +196,32 @@ if (-not $SkipCodex) {
     try { & codex mcp remove immich 2>&1 | Out-Null } catch {}
     & codex mcp add paperless --url 'http://paperless-mcp.archer.casa' --bearer-token-env-var HOMELAB_MCP_API_KEY
     if ($LASTEXITCODE -ne 0) { throw "codex mcp add paperless failed ($LASTEXITCODE)" }
-    & codex mcp add immich --url 'http://immich-mcp.archer.casa/mcp'
+    # Immich is first-class alongside Paperless (native HTTP MCP, allowlist only).
+    if ($immich.UseHostHeader) {
+      # Some Codex builds accept --header; if not, fall back to plain URL and document Host need.
+      & codex mcp add immich --url $immich.Url 2>$null
+      if ($LASTEXITCODE -ne 0) {
+        & codex mcp add immich --url $immich.Url
+      }
+      Write-Warning "Codex Immich uses $($immich.Url); ensure Host: $($immich.HostHeader) is sent if the client supports headers."
+    } else {
+      & codex mcp add immich --url $immich.Url
+    }
     if ($LASTEXITCODE -ne 0) { throw "codex mcp add immich failed ($LASTEXITCODE)" }
-    Write-Host 'Codex MCP servers registered.'
+    Write-Host 'Codex MCP servers registered (paperless+immich).'
   } else {
     Merge-TomlFragment -TargetPath (Join-Path $env:USERPROFILE '.codex\config.toml') `
       -FragmentPath (Join-Path $FragDir 'codex.homelab-mcp.toml') -ServerNames $names
+    if ($immich.UseHostHeader) {
+      # Patch Immich URL when DNS is broken (mirror Grok fallback).
+      $cfg = Join-Path $env:USERPROFILE '.codex\config.toml'
+      $raw = Get-Content -Raw $cfg
+      $raw = $raw -replace 'url = "http://immich-mcp\.archer\.casa/mcp"', ("url = `"{0}`"" -f $immich.Url)
+      if ($raw -notmatch '\[mcp_servers\.immich\.http_headers\]' -and $raw -notmatch '\[mcp_servers\.immich\.headers\]') {
+        $raw = $raw.TrimEnd() + "`n`n[mcp_servers.immich.http_headers]`nHost = `"$($immich.HostHeader)`"`n"
+      }
+      [System.IO.File]::WriteAllText($cfg, $raw)
+    }
   }
 }
 
@@ -207,7 +229,6 @@ if (-not $SkipGrok) {
   if (-not (Test-PaperlessEnvKey)) {
     Write-Warning 'PAPERLESS_API_KEY not set; Grok paperless stdio MCP will fail auth until set (re-run -LoadKeyFromCluster).'
   }
-  $immich = Resolve-ImmichMcpUrl
   if (Get-Command grok -ErrorAction SilentlyContinue) {
     Write-Host 'Installing Grok MCP servers via CLI...'
     try { & grok mcp remove paperless 2>&1 | Out-Null } catch {}
@@ -276,6 +297,9 @@ if (-not $SkipGemini) {
 
 Write-Host ''
 Write-Host 'Done. Restart Codex / Grok / Antigravity (agy) so they reload MCP config and User env.'
-Write-Host 'Smoke (from LAN/Tailscale):'
-Write-Host '  curl -sS -o NUL -w "%{http_code}" -H "Authorization: Bearer $env:HOMELAB_MCP_API_KEY" http://paperless-mcp.archer.casa/docs'
-Write-Host '  curl -sS http://immich-mcp.archer.casa/health'
+Write-Host 'Immich registered for supported clients (Codex / Grok / Gemini / Antigravity).'
+Write-Host 'Smoke (from LAN/Tailscale allowlist — never hangs if you use -m/--max-time):'
+Write-Host '  curl -sS -m 5 -o NUL -w "%{http_code}" -H "Authorization: Bearer $env:HOMELAB_MCP_API_KEY" http://paperless-mcp.archer.casa/docs'
+Write-Host '  curl -sS -m 5 http://immich-mcp.archer.casa/health'
+Write-Host 'Validate (timed Immich probe + config checks):'
+Write-Host '  powershell -ExecutionPolicy Bypass -File .\scripts\validate-homelab-mcp.ps1'

@@ -143,13 +143,25 @@ install_mcp_clients() {
   # shellcheck disable=SC1090
   [ -f "$SHELL_SNIPPET_DST" ] && . "$SHELL_SNIPPET_DST"
 
+  # Resolve Immich URL: hostname when DNS works, else Traefik Tailscale VIP + Host.
+  local immich_host="immich-mcp.archer.casa"
+  local immich_url="http://${immich_host}/mcp"
+  local immich_use_host_header=0
+  local ts_vip="${HOMELAB_TRAEFIK_TS_IP:-100.68.151.94}"
+  if getent hosts "$immich_host" >/dev/null 2>&1 || host "$immich_host" >/dev/null 2>&1 || nslookup "$immich_host" >/dev/null 2>&1; then
+    log "Immich DNS ok: $immich_host"
+  else
+    immich_url="http://${ts_vip}/mcp"
+    immich_use_host_header=1
+    log "warning: DNS for $immich_host failed; Immich MCP URL=$immich_url with Host: $immich_host"
+  fi
+
   if command -v codex >/dev/null 2>&1; then
     codex mcp remove paperless >/dev/null 2>&1 || true
     codex mcp remove immich >/dev/null 2>&1 || true
-    # Note: Antigravity-CLI natively handles http URLs by connecting to their SSE endpoint or directly as SSE URL
-    codex mcp add paperless --url 'http://paperless-mcp.archer.casa/sse' --bearer-token-env-var HOMELAB_MCP_API_KEY
-    codex mcp add immich --url 'http://immich-mcp.archer.casa/mcp'
-    log "Codex MCP: paperless + immich"
+    codex mcp add paperless --url 'http://paperless-mcp.archer.casa' --bearer-token-env-var HOMELAB_MCP_API_KEY
+    codex mcp add immich --url "$immich_url"
+    log "Codex MCP: paperless + immich ($immich_url)"
   else
     log "codex CLI not found; skip Codex MCP CLI registration"
   fi
@@ -157,10 +169,19 @@ install_mcp_clients() {
   if command -v grok >/dev/null 2>&1; then
     grok mcp remove paperless >/dev/null 2>&1 || true
     grok mcp remove immich >/dev/null 2>&1 || true
-    grok mcp add --transport http paperless 'http://paperless-mcp.archer.casa/sse' \
-      --header 'Authorization: Bearer ${HOMELAB_MCP_API_KEY}'
-    grok mcp add --transport http immich 'http://immich-mcp.archer.casa/mcp'
-    log "Grok MCP: paperless + immich"
+    # Paperless: native stdio MCP (cluster mcpo is OpenAPI, not streamable HTTP MCP)
+    local paperless_url="${PAPERLESS_URL:-https://paperless.archer.casa}"
+    grok mcp add paperless \
+      -e "PAPERLESS_URL=${paperless_url}" \
+      -e 'PAPERLESS_API_KEY=${PAPERLESS_API_KEY}' \
+      -e "PAPERLESS_PUBLIC_URL=${paperless_url}" \
+      -- npx -y @baruchiro/paperless-mcp@latest
+    if [ "$immich_use_host_header" -eq 1 ]; then
+      grok mcp add --transport http immich "$immich_url" --header "Host: ${immich_host}"
+    else
+      grok mcp add --transport http immich "$immich_url"
+    fi
+    log "Grok MCP: paperless=stdio, immich=http ($immich_url)"
   else
     log "grok CLI not found; writing fragment to ~/.grok/config.toml if missing"
     mkdir -p "$HOME/.grok"
@@ -169,6 +190,12 @@ install_mcp_clients() {
       if ! grep -q '\[mcp_servers.paperless\]' "$HOME/.grok/config.toml" 2>/dev/null; then
         printf '\n' >>"$HOME/.grok/config.toml"
         cat "$REPO_ROOT/mcp/fragments/grok.homelab-mcp.toml" >>"$HOME/.grok/config.toml"
+      fi
+      if [ "$immich_use_host_header" -eq 1 ] && [ -f "$HOME/.grok/config.toml" ]; then
+        # Best-effort URL patch when DNS is broken
+        if command -v sed >/dev/null 2>&1; then
+          sed -i.bak-homelab-mcp "s|url = \"http://immich-mcp.archer.casa/mcp\"|url = \"${immich_url}\"|" "$HOME/.grok/config.toml" 2>/dev/null || true
+        fi
       fi
     fi
   fi

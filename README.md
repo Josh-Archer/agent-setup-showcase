@@ -1,4 +1,4 @@
-﻿# Agent Setup Showcase
+# Agent Setup Showcase
 
 Sanitized snapshot of agent-related configuration folders (from `origin/main` of the homelab workspace):
 
@@ -38,6 +38,7 @@ This:
 2. Installs PowerShell profile hooks that load `HOMELAB_MCP_API_KEY` and `PAPERLESS_API_KEY` (precedence: process â†’ user â†’ **kubectl** â†’ cache; fail-loud, see [mcp/README.md](mcp/README.md))
 3. Registers Paperless + Immich MCP for **Codex**, **Grok**, and **Antigravity (agy) / Gemini**
 4. Validates end-state and fails the bootstrap if anything is only half-installed
+5. Validate probes Immich `/health` with a short timeout (actionable failures; no silent handshake hang)
 
 **Partial failure / re-run:** install steps are idempotent. Re-run `setup_agents.ps1`, then the end-state script until exit code 0. See [docs/windows-bootstrap.md](docs/windows-bootstrap.md).
 
@@ -45,10 +46,11 @@ This:
 
 ```bash
 cd path/to/agent-setup-showcase
-chmod +x scripts/setup_agents.sh
+chmod +x scripts/setup_agents.sh scripts/validate-homelab-mcp.sh
 ./scripts/setup_agents.sh
 # new shell or:
 source ~/.zshrc   # or ~/.bashrc
+./scripts/validate-homelab-mcp.sh
 ```
 
 Hooks are idempotent blocks in `~/.zshrc` and `~/.bashrc` marked:
@@ -65,9 +67,9 @@ Hooks are idempotent blocks in `~/.zshrc` and `~/.bashrc` marked:
 |--------|-----------|------|
 | Paperless (Grok / native MCP) | stdio `npx @baruchiro/paperless-mcp` | `${PAPERLESS_API_KEY}` |
 | Paperless (mcpo OpenAPI) | `http://paperless-mcp.archer.casa` | Bearer `${HOMELAB_MCP_API_KEY}` |
-| Immich | `http://immich-mcp.archer.casa/mcp` | LAN/Tailscale allowlist only |
+| Immich | `http://immich-mcp.archer.casa/mcp` | LAN/Tailscale allowlist only (`192.168.0.0/16`, `100.64.0.0/10`, loopback) |
 
-Fragments live under `mcp/fragments/`. See [mcp/README.md](mcp/README.md).
+Fragments live under `mcp/fragments/`. See [mcp/README.md](mcp/README.md) for **allowlist expectations**, Immich DNS/Tailscale fallback, timed health probes, and failure-mode remediation.
 
 **Never commit** `~/.config/homelab/mcp-api-key`, `paperless-api-key`, or real token values.
 
