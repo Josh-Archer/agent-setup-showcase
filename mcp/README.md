@@ -7,8 +7,38 @@ Shared MCP client config for **Codex**, **Grok**, and **Antigravity (agy) / Gemi
 | Variable | Used by | Purpose |
 | -------- | ------- | ------- |
 | `HOMELAB_MCP_API_KEY` | Paperless (mcpo) | `Authorization: Bearer …` client key (`mcp/paperless-mcp-secret` → `API_KEY`) |
+| `PAPERLESS_API_KEY` | Paperless (stdio MCP) | Paperless-NGX token (`mcp/paperless-mcp-secret` → `PAPERLESS_API_TOKEN`) |
 
 Immich MCP has **no edge API key** (LAN/Tailscale allowlist only). Prefer a **read-only** Immich API key in the cluster.
+
+## Secret load precedence (fail-loud)
+
+Profile snippets (`shell/homelab-mcp.env.sh`, `shell/homelab-mcp.ps1`) and the shared policy module (`scripts/homelab_mcp_secret_load.py`) resolve each key in this order:
+
+| Priority | Source | Notes |
+| -------- | ------ | ----- |
+| 1 | **Process env** | Already exported in this shell / agent process |
+| 2 | **User env** (Windows) | `[Environment]::GetEnvironmentVariable(..., 'User')` |
+| 3 | **kubectl secret** | Live `mcp/paperless-mcp-secret`; **refreshes** local cache (+ User env on Windows) |
+| 4 | **Cache file** | `~/.config/homelab/mcp-api-key` or `paperless-api-key` — **offline fallback only** |
+
+**Why kubectl before cache:** a stale cache file used to win silently when it still contained a rotated/dead API key, so MCP looked “configured” while every call failed. Live cluster secrets now outrank the cache whenever `kubectl` can read them.
+
+**Fail-loud behavior:**
+
+- Missing key after all sources → warning on stderr / `Write-Warning` (not a silent no-op).
+- Cache used while kubectl is missing or returned empty → warning that the key may be stale.
+- Cache that differs from kubectl → refresh cache from cluster and warn.
+
+**Optional lightweight probe** (disabled by default so interactive shells stay fast):
+
+```bash
+export HOMELAB_MCP_KEY_PROBE=1
+# optional override (default: http://paperless-mcp.archer.casa/docs)
+export HOMELAB_MCP_KEY_PROBE_URL='http://paperless-mcp.archer.casa/docs'
+```
+
+When probe is on, a rejected candidate is skipped and the next source is tried (still fail-loud if none work). Policy unit tests: `python3 -m unittest scripts.tests.test_secret_load_order -v`.
 
 ## Endpoints (LAN / Tailscale)
 
