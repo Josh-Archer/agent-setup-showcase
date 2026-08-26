@@ -1,0 +1,13 @@
+{
+  "paperless": {
+    "url": "http://paperless-mcp.archer.casa/sse",
+    "headers": {
+      "Authorization": "Bearer ${HOMELAB_MCP_API_KEY}"
+    },
+    "timeout": 30000
+  },
+  "immich": {
+    "url": "http://immich-mcp.archer.casa/mcp",
+    "timeout": 30000
+  }
+}

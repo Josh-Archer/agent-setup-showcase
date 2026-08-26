@@ -27,6 +27,7 @@ GROK_DIR = ROOT / ".grok" / "roles"
 GROK_AGENT_DIR = ROOT / ".grok" / "agents"
 AGY_PLUGIN_DIR = ROOT / ".agents" / "plugins" / "home-codex-agents"
 AGY_AGENT_DIR = AGY_PLUGIN_DIR / "agents"
+OMP_AGENT_DIR = ROOT / ".omp" / "agents"
 MATRIX_PATH = ROOT / "models" / "matrix.json"
 
 
@@ -116,6 +117,11 @@ def resolve_provider_model(
         if tier == "medium":
             return "Gemini 3.5 Flash (Medium)"
         return "Claude Opus 4.6 (Thinking)"
+    if provider == "omp":
+        pin = tier_provider_model(tier, "claude", matrix) if tier else None
+        if pin:
+            return pin
+        return "claude-sonnet-4-6" if tier in {"medium", "low"} else "claude-opus-4-6"
     raise SystemExit(f"No model pin for provider={provider!r} role={role!r}")
 
 
@@ -125,6 +131,10 @@ def grok_model(codex_model: str, role: str | None = None) -> str:
 
 def agy_model(codex_model: str, role: str | None = None) -> str:
     return resolve_provider_model("agy", role=role, codex_model=codex_model)
+
+
+def omp_model(codex_model: str, role: str | None = None) -> str:
+    return resolve_provider_model("omp", role=role, codex_model=codex_model)
 
 
 def capability(tools: str) -> str:
@@ -146,6 +156,17 @@ def agy_tools(tools: str) -> str:
     return "[" + ", ".join(mapped) + "]"
 
 
+def omp_tools(tools: str) -> list[str]:
+    mapped: list[str] = ["read", "grep", "glob", "bash", "lsp", "web_search"]
+    if "edit" in tools:
+        mapped += ["edit", "write"]
+    if "todo" in tools:
+        mapped += ["todo"]
+    if "agent" in tools:
+        mapped += ["task"]
+    return mapped
+
+
 def source_agent_names(root: Path) -> set[str]:
     """Canonical role names from `.codex/agents/*.agent.md`."""
     source_dir = root / ".codex" / "agents"
@@ -163,6 +184,7 @@ def expected_surface_files(root: Path, names: set[str] | None = None) -> set[Pat
         paths.add(root / ".grok" / "roles" / f"{name}.toml")
         paths.add(root / ".grok" / "agents" / f"{name}.md")
         paths.add(root / ".agents" / "plugins" / "home-codex-agents" / "agents" / f"{name}.md")
+        paths.add(root / ".omp" / "agents" / f"{name}.md")
     return paths
 
 
@@ -174,6 +196,7 @@ def find_orphan_surfaces(root: Path) -> list[Path]:
     - `.grok/roles/<role>.toml`
     - `.grok/agents/<role>.md`
     - `.agents/plugins/home-codex-agents/agents/<role>.md`
+    - `.omp/agents/<role>.md`
 
     Non-matching files (e.g. plugin.json, rules/*) are left alone.
     """
@@ -195,6 +218,12 @@ def find_orphan_surfaces(root: Path) -> list[Path]:
     agy_agent_dir = root / ".agents" / "plugins" / "home-codex-agents" / "agents"
     if agy_agent_dir.is_dir():
         for path in sorted(agy_agent_dir.glob("*.md")):
+            if path not in expected:
+                orphans.append(path)
+
+    omp_agent_dir = root / ".omp" / "agents"
+    if omp_agent_dir.is_dir():
+        for path in sorted(omp_agent_dir.glob("*.md")):
             if path not in expected:
                 orphans.append(path)
 
@@ -290,12 +319,14 @@ def write_surfaces(root: Path, *, prune: bool = False) -> tuple[int, list[Path]]
     grok_agent_dir = root / ".grok" / "agents"
     agy_plugin_dir = root / ".agents" / "plugins" / "home-codex-agents"
     agy_agent_dir = agy_plugin_dir / "agents"
+    omp_agent_dir = root / ".omp" / "agents"
     matrix_path = root / "models" / "matrix.json"
     matrix = load_matrix(str(matrix_path)) if matrix_path.is_file() else load_matrix()
 
     grok_dir.mkdir(parents=True, exist_ok=True)
     grok_agent_dir.mkdir(parents=True, exist_ok=True)
     agy_agent_dir.mkdir(parents=True, exist_ok=True)
+    omp_agent_dir.mkdir(parents=True, exist_ok=True)
     (agy_plugin_dir / "rules").mkdir(parents=True, exist_ok=True)
 
     agents = sorted(source_dir.glob("*.agent.md"))
@@ -314,6 +345,9 @@ def write_surfaces(root: Path, *, prune: bool = False) -> tuple[int, list[Path]]
         )
         agy_pin = resolve_provider_model(
             "agy", role=name, codex_model=model, matrix=matrix
+        )
+        omp_pin = resolve_provider_model(
+            "omp", role=name, codex_model=model, matrix=matrix
         )
 
         grok = (
@@ -348,6 +382,20 @@ def write_surfaces(root: Path, *, prune: bool = False) -> tuple[int, list[Path]]
             + body
         )
         (agy_agent_dir / f"{name}.md").write_text(agy, encoding="utf-8")
+
+        omp_tools_yaml = "\n".join(f"  - {t}" for t in omp_tools(tools))
+        omp_agent = (
+            "---\n"
+            f"name: {name}\n"
+            f"description: {description}\n"
+            f"model:\n"
+            f"  - \"{omp_pin}\"\n"
+            f"tools:\n"
+            f"{omp_tools_yaml}\n"
+            "---\n\n"
+            + body
+        )
+        (omp_agent_dir / f"{name}.md").write_text(omp_agent, encoding="utf-8")
 
     (agy_plugin_dir / "plugin.json").write_text(
         '{\n'
@@ -405,6 +453,7 @@ def _generated_trees(root: Path) -> list[Path]:
         root / ".grok" / "roles",
         root / ".grok" / "agents",
         root / ".agents" / "plugins" / "home-codex-agents",
+        root / ".omp" / "agents",
     ]
 
 
@@ -489,6 +538,7 @@ def main() -> int:
     print(f"Generated {count} Grok roles in {GROK_DIR}")
     print(f"Generated {count} Grok agents in {GROK_AGENT_DIR}")
     print(f"Generated {count} Antigravity agents in {AGY_PLUGIN_DIR}")
+    print(f"Generated {count} OMP agents in {OMP_AGENT_DIR}")
     report_orphans(orphans, ROOT, pruned=args.prune)
     return 0
 

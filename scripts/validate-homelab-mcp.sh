@@ -87,6 +87,24 @@ check(".gemini/settings.json", "paperless", "immich")
 agy = home / ".gemini/antigravity/mcp_config.json"
 if agy.exists():
     check(".gemini/antigravity/mcp_config.json", "paperless", "immich")
+omp_cfg = home / ".omp/agent/config.yml"
+if omp_cfg.exists():
+    try:
+        try:
+            import yaml
+            doc = yaml.safe_load(omp_cfg.read_text(encoding="utf-8")) or {}
+        except ImportError:
+            doc = json.loads(omp_cfg.read_text(encoding="utf-8"))
+        servers = doc.get("mcpServers") or {}
+        missing = [k for k in ["paperless", "immich"] if k not in servers]
+        if missing:
+            print(f"FAIL .omp/agent/config.yml missing {', '.join(missing)}")
+            failed += 1
+        else:
+            print("OK  .omp/agent/config.yml (paperless+immich)")
+    except Exception as e:
+        print(f"FAIL .omp/agent/config.yml: {e}")
+        failed += 1
 sys.exit(1 if failed else 0)
 PY
   then

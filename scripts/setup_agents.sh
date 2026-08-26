@@ -47,11 +47,23 @@ install_agent_trees() {
       || { mkdir -p "$HOME/.codex/agents"; cp -R "$REPO_ROOT/.codex/agents/." "$HOME/.codex/agents/"; }
     log "synced Codex agents -> ~/.codex/agents"
   fi
+  if [ -d "$REPO_ROOT/.codex/skills" ]; then
+    mkdir -p "$HOME/.codex/skills"
+    rsync -a --delete "$REPO_ROOT/.codex/skills/" "$HOME/.codex/skills/" 2>/dev/null \
+      || { mkdir -p "$HOME/.codex/skills"; cp -R "$REPO_ROOT/.codex/skills/." "$HOME/.codex/skills/"; }
+    log "synced Codex skills -> ~/.codex/skills"
+  fi
   if [ -d "$REPO_ROOT/.claude/agents" ]; then
     mkdir -p "$HOME/.claude"
     rsync -a --delete "$REPO_ROOT/.claude/agents/" "$HOME/.claude/agents/" 2>/dev/null \
       || { mkdir -p "$HOME/.claude/agents"; cp -R "$REPO_ROOT/.claude/agents/." "$HOME/.claude/agents/"; }
     log "synced Claude agents -> ~/.claude/agents"
+  fi
+  if [ -d "$REPO_ROOT/.claude/skills" ]; then
+    mkdir -p "$HOME/.claude/skills"
+    rsync -a --delete "$REPO_ROOT/.claude/skills/" "$HOME/.claude/skills/" 2>/dev/null \
+      || { mkdir -p "$HOME/.claude/skills"; cp -R "$REPO_ROOT/.claude/skills/." "$HOME/.claude/skills/"; }
+    log "synced Claude skills -> ~/.claude/skills"
   fi
   if [ -d "$REPO_ROOT/.gemini/agents" ]; then
     mkdir -p "$HOME/.gemini"
@@ -60,9 +72,22 @@ install_agent_trees() {
     log "synced Gemini agents -> ~/.gemini/agents"
   fi
   if [ -d "$REPO_ROOT/.gemini/skills" ]; then
+    mkdir -p "$HOME/.gemini/skills"
     rsync -a --delete "$REPO_ROOT/.gemini/skills/" "$HOME/.gemini/skills/" 2>/dev/null \
       || { mkdir -p "$HOME/.gemini/skills"; cp -R "$REPO_ROOT/.gemini/skills/." "$HOME/.gemini/skills/"; }
     log "synced Gemini skills -> ~/.gemini/skills"
+  fi
+  if [ -d "$REPO_ROOT/.omp/agents" ]; then
+    mkdir -p "$HOME/.omp/agent/agents"
+    rsync -a --delete "$REPO_ROOT/.omp/agents/" "$HOME/.omp/agent/agents/" 2>/dev/null \
+      || { mkdir -p "$HOME/.omp/agent/agents"; cp -R "$REPO_ROOT/.omp/agents/." "$HOME/.omp/agent/agents/"; }
+    log "synced OMP agents -> ~/.omp/agent/agents"
+  fi
+  if [ -d "$REPO_ROOT/.omp/skills" ]; then
+    mkdir -p "$HOME/.omp/agent/skills"
+    rsync -a --delete "$REPO_ROOT/.omp/skills/" "$HOME/.omp/agent/skills/" 2>/dev/null \
+      || { mkdir -p "$HOME/.omp/agent/skills"; cp -R "$REPO_ROOT/.omp/skills/." "$HOME/.omp/agent/skills/"; }
+    log "synced OMP skills -> ~/.omp/agent/skills"
   fi
 }
 
@@ -235,6 +260,35 @@ for sub_path in ["antigravity/mcp_config.json", "antigravity-cli/mcp_config.json
             pass
     agy.write_text(json.dumps(agy_doc, indent=2) + "\n", encoding="utf-8")
 print("[setup_agents] synced Gemini/Antigravity mcpServers")
+omp_cfg = home / ".omp" / "agent" / "config.yml"
+if (home / ".omp").exists() or omp_cfg.exists():
+    try:
+        try:
+            import yaml
+        except ImportError:
+            yaml = None
+        omp_cfg.parent.mkdir(parents=True, exist_ok=True)
+        doc = {}
+        if omp_cfg.exists():
+            content = omp_cfg.read_text(encoding="utf-8")
+            if yaml:
+                doc = yaml.safe_load(content) or {}
+            else:
+                doc = json.loads(content or "{}")
+        if not isinstance(doc, dict):
+            doc = {}
+        s = doc.get("mcpServers") or {}
+        if not isinstance(s, dict):
+            s = {}
+        s.update(frag)
+        doc["mcpServers"] = s
+        if yaml:
+            omp_cfg.write_text(yaml.dump(doc, sort_keys=False), encoding="utf-8")
+        else:
+            omp_cfg.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+        print("[setup_agents] synced OMP mcpServers -> ~/.omp/agent/config.yml")
+    except Exception as e:
+        print(f"[setup_agents] warning: could not sync OMP mcpServers: {e}")
 PY
 }
 
@@ -319,7 +373,7 @@ main() {
   refresh_key_cache
   install_mcp_clients
   update_hosts_entry
-  log "done. Open a new shell (or: source ~/.zshrc) and restart Codex/Grok/Antigravity."
+  log "done. Open a new shell (or: source ~/.zshrc) and restart Codex/Claude/Gemini/Grok/Antigravity/OMP."
 }
 
 main "$@"

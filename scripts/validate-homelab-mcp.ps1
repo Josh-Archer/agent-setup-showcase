@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 <#
 .SYNOPSIS
   Validate Homelab MCP config + connectivity without printing secrets.
@@ -70,6 +70,19 @@ try {
   $agy = Get-Content "$env:USERPROFILE\.gemini\antigravity\mcp_config.json" -Raw -ErrorAction Stop | ConvertFrom-Json
   if ($agy.mcpServers.paperless -and $agy.mcpServers.immich) { Ok 'antigravity mcp_config (paperless+immich)' } else { Bad 'antigravity mcp_config missing paperless and/or immich' }
 } catch { Bad "antigravity: $_" }
+
+$ompCfg = "$env:USERPROFILE\.omp\agent\config.yml"
+if (Test-Path $ompCfg) {
+  try {
+    $omp = Get-Content $ompCfg -Raw -ErrorAction Stop | ConvertFrom-Json
+    if ($omp.mcpServers.paperless -and $omp.mcpServers.immich) { Ok 'omp config (paperless+immich)' } else { Bad 'omp config missing paperless and/or immich' }
+  } catch {
+    # Check via regex/text fallback if yaml format
+    $hasPl = Select-String -Path $ompCfg -Pattern 'paperless' -Quiet -ErrorAction SilentlyContinue
+    $hasIm = Select-String -Path $ompCfg -Pattern 'immich' -Quiet -ErrorAction SilentlyContinue
+    if ($hasPl -and $hasIm) { Ok 'omp config.yml (paperless+immich)' } else { Bad 'omp config.yml missing paperless/immich' }
+  }
+}
 
 function Resolve-ImmichProbeTargets {
   <#

@@ -1,4 +1,4 @@
-﻿# Agent Architecture and Delegation
+# Agent Architecture and Delegation
 
 This repository defines the agent role maps and provides capabilities for delegating repository work from Codex to external agent runtimesâ€”specifically **Grok Build** (`grok` CLI) and **Antigravity** (`agy` CLI).
 
@@ -17,6 +17,7 @@ Instructions are intentionally layered. Do not hand-edit generated surfaces.
 | **Codex agent index** | `.codex/agents/AGENTS.md` | Codex operators; links here and to the skill |
 | **Generated Grok agents** | `.grok/agents/*.md`, `.grok/roles/*.toml` | `grok --agent <role>` |
 | **Generated Antigravity plugin** | `.agents/plugins/home-codex-agents/` | `agy --agent <role>` |
+| **Generated OMP agents** | `.omp/agents/*.md` | `omp` sessions / subagents |
 
 ### Grok `agents_md` behavior
 
@@ -37,6 +38,12 @@ Antigravity does **not** auto-load root `AGENTS.md`. Sync generates
 pointer for agy sessions. Prefer putting durable cross-provider rules here in
 root `AGENTS.md`, and regenerate the plugin after role changes.
 
+### OMP (Oh My Pi)
+
+OMP sessions automatically discover root `AGENTS.md` and `CLAUDE.md`, load
+installed skills from `~/.omp/agent/skills/` and `.omp/skills/`, and resolve
+agent definitions from `~/.omp/agent/agents/` and `.omp/agents/`.
+
 ### Regenerating surfaces
 
 ```bash
@@ -47,15 +54,27 @@ python3 scripts/sync_agent_surfaces.py --prune   # also delete stale generated s
 
 **Prune warning:** default sync is safe and never deletes. After you **rename or
 delete** a Codex agent under `.codex/agents/`, old files can remain in
-`.grok/roles/`, `.grok/agents/`, and `.agents/plugins/home-codex-agents/agents/`.
-Sync reports those orphans and only removes them when you pass **`--prune`**.
-Review the listed paths before pruning — `--prune` is destructive for unmatched
-generated surfaces only (not for hand-authored Codex sources).
+`.grok/roles/`, `.grok/agents/`, `.agents/plugins/home-codex-agents/agents/`, and
+`.omp/agents/`. Sync reports those orphans and only removes them when you pass
+**`--prune`**. Review the listed paths before pruning — `--prune` is destructive
+for unmatched generated surfaces only (not for hand-authored Codex sources).
 
 CI enforces the same check via `.github/workflows/agent-surface-drift.yml`
 (on PRs and pushes to `master`/`main`). After editing `.codex/agents/*.agent.md`,
-run the sync script, commit the regenerated `.grok/` and
-`.agents/plugins/home-codex-agents/` trees, and push — do not hand-edit generated files.
+run the sync script, commit the regenerated `.grok/`,
+`.agents/plugins/home-codex-agents/`, and `.omp/` trees, and push — do not hand-edit generated files.
+
+---
+
+## Anti-AI Slop & Quality Standard (`unslop`)
+
+All agents across all harnesses (Codex, Claude, Gemini/Antigravity, Grok, OMP, Copilot) must follow the **unslop** core contract ([`.codex/skills/unslop/SKILL.md`](.codex/skills/unslop/SKILL.md)):
+
+1. **Direct & Concise**: Avoid conversational throat-clearing, sycophantic openers ("Certainly!"), and generic closing fluff. Deliver the substance immediately.
+2. **No Inflated AI Vocabulary**: Eliminate overused marker buzzwords (*delve*, *tapestry*, *testament*, *pivotal*, *beacon*, *catalyst*, *streamline*, *harness*, *transformative*).
+3. **No Code Slop**: Do not write commentary that merely narrates obvious syntax (e.g. `// Increment i by 1`). Avoid speculative over-engineering and unnecessary helper wrappers.
+4. **Preserve Facts**: Always retain exact file paths, code syntax, technical precision, and domain details.
+5. **Skill Invocations**: Triggered via `/unslop`, `@unslop`, or when reviewing and editing AI drafts to calibrate human tone.
 
 ---
 

@@ -2,14 +2,15 @@
 
 Sanitized snapshot of agent-related configuration folders (from `origin/main` of the homelab workspace):
 
-- `.codex` Ã¢â‚¬â€ Codex agents + skills
-- `.gemini` Ã¢â‚¬â€ Gemini / Antigravity agents + skills
-- `.github` Ã¢â‚¬â€ GitHub agent definitions + workflows
-- `.claude` Ã¢â‚¬â€ Claude Code agents
-- `.grok` Ã¢â‚¬â€ Grok agents + roles
-- `mcp/` Ã¢â‚¬â€ Homelab MCP client fragments (Paperless + Immich)
-- `shell/` Ã¢â‚¬â€ Shell profile snippets (zsh/bash + PowerShell)
-- `scripts/` Ã¢â‚¬â€ Bootstrap + validate + agent surface sync
+- `.codex` — Codex agents + skills
+- `.gemini` — Gemini / Antigravity agents + skills
+- `.github` — GitHub agent definitions + workflows
+- `.claude` — Claude Code agents
+- `.grok` — Grok agents + roles
+- `.omp` — Oh My Pi agents + skills
+- `mcp/` — Homelab MCP client fragments (Paperless + Immich)
+- `shell/` — Shell profile snippets (zsh/bash + PowerShell)
+- `scripts/` — Bootstrap + validate + agent surface sync
 
 ## Notes
 

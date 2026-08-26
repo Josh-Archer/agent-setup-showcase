@@ -43,6 +43,12 @@ class ImmichFragmentContractTests(unittest.TestCase):
         self.assertIn("paperless", servers)
         self.assertIn("immich-mcp.archer.casa/mcp", servers["immich"]["url"])
 
+    def test_omp_fragment_registers_immich(self) -> None:
+        data = json.loads((FRAG / "omp.mcpServers.json").read_text(encoding="utf-8"))
+        self.assertIn("immich", data)
+        self.assertIn("paperless", data)
+        self.assertIn("immich-mcp.archer.casa/mcp", data["immich"]["url"])
+
 
 class ImmichBootstrapContractTests(unittest.TestCase):
     def test_install_script_registers_immich_for_clients(self) -> None:

@@ -195,6 +195,7 @@ class SyncSurfaceTests(unittest.TestCase):
             root / ".grok" / "roles" / f"{name}.toml",
             root / ".grok" / "agents" / f"{name}.md",
             root / ".agents" / "plugins" / "home-codex-agents" / "agents" / f"{name}.md",
+            root / ".omp" / "agents" / f"{name}.md",
         ]
 
     def test_delete_leaves_orphans_without_prune(self) -> None:
@@ -215,12 +216,13 @@ class SyncSurfaceTests(unittest.TestCase):
             self.assertEqual(count, 1)
             orphan_names = {p.name for p in orphans}
             self.assertEqual(orphan_names, {"beta.toml", "beta.md"})
-            self.assertEqual(len(orphans), 3)
+            self.assertEqual(len(orphans), 4)
             self.assertTrue(any(p.as_posix().endswith(".grok/roles/beta.toml") for p in orphans))
             self.assertTrue(any(p.as_posix().endswith(".grok/agents/beta.md") for p in orphans))
             self.assertTrue(
                 any(p.as_posix().endswith("home-codex-agents/agents/beta.md") for p in orphans)
             )
+            self.assertTrue(any(p.as_posix().endswith(".omp/agents/beta.md") for p in orphans))
             for path in self._surface_paths(root, "beta"):
                 self.assertTrue(path.is_file(), f"safe mode must keep {path}")
             for path in self._surface_paths(root, "alpha"):
@@ -236,7 +238,7 @@ class SyncSurfaceTests(unittest.TestCase):
 
             count, orphans = self.sync.write_surfaces(root, prune=True)
             self.assertEqual(count, 1)
-            self.assertEqual(len(orphans), 3)
+            self.assertEqual(len(orphans), 4)
             for path in self._surface_paths(root, "drop"):
                 self.assertFalse(path.exists(), f"prune must remove {path}")
             for path in self._surface_paths(root, "keep"):
@@ -256,7 +258,7 @@ class SyncSurfaceTests(unittest.TestCase):
 
             count, orphans = self.sync.write_surfaces(root, prune=False)
             self.assertEqual(count, 1)
-            self.assertEqual(len(orphans), 3)
+            self.assertEqual(len(orphans), 4)
             for path in self._surface_paths(root, "old-name"):
                 self.assertTrue(path.is_file(), f"safe mode keeps renamed orphan {path}")
             for path in self._surface_paths(root, "new-name"):
@@ -265,7 +267,7 @@ class SyncSurfaceTests(unittest.TestCase):
             # Explicit prune removes only the old name.
             count, orphans = self.sync.write_surfaces(root, prune=True)
             self.assertEqual(count, 1)
-            self.assertEqual(len(orphans), 3)
+            self.assertEqual(len(orphans), 4)
             for path in self._surface_paths(root, "old-name"):
                 self.assertFalse(path.exists(), path)
             for path in self._surface_paths(root, "new-name"):

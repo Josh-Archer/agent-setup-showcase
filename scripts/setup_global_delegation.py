@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -34,7 +35,10 @@ def create_link(source: Path, destination: Path, label: str) -> Path:
                 return destination
         except OSError:
             pass
-        raise SystemExit(f"Refusing to replace existing global {label}: {destination}. Move it aside and rerun.")
+        if destination.is_symlink() or destination.is_file():
+            destination.unlink()
+        elif destination.is_dir():
+            shutil.rmtree(destination)
     if os.name == "nt" and source.is_dir():
         subprocess.run(["cmd", "/c", "mklink", "/J", str(destination), str(source)], check=True, stdout=subprocess.DEVNULL)
     else:
@@ -58,11 +62,26 @@ def sync_skills(repo_root: Path, codex_home: Path) -> list[Path]:
     for source in sorted(source_root.iterdir()):
         if source.is_dir() and not source.name.startswith("."):
             installed.append(install_link(source, destination_root / source.name, "Codex skill"))
+    # Also sync skills to Claude, Gemini, and OMP when present
+    home = Path.home()
+    for extra_dest, label in [
+        (home / ".claude" / "skills", "Claude skill"),
+        (home / ".gemini" / "skills", "Gemini skill"),
+        (home / ".omp" / "agent" / "skills", "OMP skill"),
+    ]:
+        if extra_dest.parent.exists():
+            extra_dest.mkdir(parents=True, exist_ok=True)
+            for source in sorted(source_root.iterdir()):
+                if source.is_dir() and not source.name.startswith("."):
+                    try:
+                        installed.append(install_link(source, extra_dest / source.name, label))
+                    except SystemExit:
+                        pass
     return installed
 
 
 def install_harness_surfaces(repo_root: Path, home: Path) -> list[Path]:
-    """Expose generated role/plugin surfaces to Grok CLI and Antigravity."""
+    """Expose generated role/plugin surfaces to Grok CLI, Antigravity, and OMP."""
     links = [
         (repo_root / ".grok" / "agents", home / ".grok" / "agents", "Grok agents"),
         (repo_root / ".grok" / "roles", home / ".grok" / "roles", "Grok roles"),
@@ -71,6 +90,7 @@ def install_harness_surfaces(repo_root: Path, home: Path) -> list[Path]:
             home / ".agents" / "plugins" / "home-codex-agents",
             "Antigravity plugin",
         ),
+        (repo_root / ".omp" / "agents", home / ".omp" / "agent" / "agents", "OMP agents"),
     ]
     return [install_link(source, destination, label) for source, destination, label in links]
 

@@ -22,7 +22,8 @@ param(
   [switch]$LoadKeyFromCluster,
   [switch]$SkipCodex,
   [switch]$SkipGrok,
-  [switch]$SkipGemini
+  [switch]$SkipGemini,
+  [switch]$SkipOmp
 )
 
 $ErrorActionPreference = 'Stop'
@@ -295,9 +296,17 @@ if (-not $SkipGemini) {
   }
 }
 
+if (-not $SkipOmp) {
+  $ompDir = Join-Path $env:USERPROFILE '.omp\agent'
+  if (Test-Path $ompDir) {
+    Merge-JsonMcpServers -TargetPath (Join-Path $ompDir 'config.yml') `
+      -FragmentPath (Join-Path $FragDir 'omp.mcpServers.json') -RootKey 'mcpServers'
+  }
+}
+
 Write-Host ''
-Write-Host 'Done. Restart Codex / Grok / Antigravity (agy) so they reload MCP config and User env.'
-Write-Host 'Immich registered for supported clients (Codex / Grok / Gemini / Antigravity).'
+Write-Host 'Done. Restart Codex / Grok / Antigravity (agy) / OMP so they reload MCP config and User env.'
+Write-Host 'Immich registered for supported clients (Codex / Grok / Gemini / Antigravity / OMP).'
 Write-Host 'Smoke (from LAN/Tailscale allowlist — never hangs if you use -m/--max-time):'
 Write-Host '  curl -sS -m 5 -o NUL -w "%{http_code}" -H "Authorization: Bearer $env:HOMELAB_MCP_API_KEY" http://paperless-mcp.archer.casa/docs'
 Write-Host '  curl -sS -m 5 http://immich-mcp.archer.casa/health'

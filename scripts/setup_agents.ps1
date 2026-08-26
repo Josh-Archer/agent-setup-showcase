@@ -125,9 +125,13 @@ Write-Log "repo=$RepoRoot"
 
 try {
   Sync-Tree -Src (Join-Path $RepoRoot '.codex\agents') -Dst (Join-Path $env:USERPROFILE '.codex\agents')
+  Sync-Tree -Src (Join-Path $RepoRoot '.codex\skills') -Dst (Join-Path $env:USERPROFILE '.codex\skills')
   Sync-Tree -Src (Join-Path $RepoRoot '.claude\agents') -Dst (Join-Path $env:USERPROFILE '.claude\agents')
+  Sync-Tree -Src (Join-Path $RepoRoot '.claude\skills') -Dst (Join-Path $env:USERPROFILE '.claude\skills')
   Sync-Tree -Src (Join-Path $RepoRoot '.gemini\agents') -Dst (Join-Path $env:USERPROFILE '.gemini\agents')
   Sync-Tree -Src (Join-Path $RepoRoot '.gemini\skills') -Dst (Join-Path $env:USERPROFILE '.gemini\skills')
+  Sync-Tree -Src (Join-Path $RepoRoot '.omp\agents') -Dst (Join-Path $env:USERPROFILE '.omp\agent\agents')
+  Sync-Tree -Src (Join-Path $RepoRoot '.omp\skills') -Dst (Join-Path $env:USERPROFILE '.omp\agent\skills')
 
   Install-ShellSnippet
   Refresh-KeyCache
