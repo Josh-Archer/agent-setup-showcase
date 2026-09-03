@@ -2,4 +2,4 @@ description = "Use when reviewing architecture and GitOps design choices at a hi
 default_capability_mode = "all"
 model = "grok-4.5"
 reasoning_effort = "medium"
-prompt_file = ".codex/agents/architecture.agent.md"
+prompt_file = ".codex/agents/architect.agent.md"

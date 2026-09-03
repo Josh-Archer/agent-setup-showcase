@@ -147,6 +147,18 @@ def omp_models(
     if not tier:
         tier = heuristic_tier(codex_model)
 
+    if role in {"architect", "architecture"}:
+        return [
+            "google-antigravity/gemini-3.8-flash:high",
+            "xai-oauth/grok-4.6:xhigh",
+            "openai-codex/gpt-5.6-sol:high",
+        ]
+    if role in {"lead", "manager"}:
+        return [
+            "google-antigravity/gemini-3.8-flash:high",
+            "xai-oauth/grok-4.6:high",
+            "openai-codex/gpt-5.6-sol:medium",
+        ]
     if role in {"builder", "development"}:
         return [
             "google-antigravity/gemini-3.8-flash:high",
@@ -159,7 +171,6 @@ def omp_models(
             "xai-oauth/grok-4.6:medium",
             "openai-codex/gpt-5.6-luna",
         ]
-
     chain: list[str] = []
 
     # 1. Claude pin

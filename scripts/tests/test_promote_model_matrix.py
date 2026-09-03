@@ -38,8 +38,8 @@ class MatrixFixtureTests(unittest.TestCase):
         self.assertIn("high", self.matrix["tiers"])
         self.assertIn("medium", self.matrix["tiers"])
         self.assertIn("low", self.matrix["tiers"])
-        self.assertIn("architecture", self.matrix["roles"])
-        self.assertEqual(self.matrix["roles"]["architecture"]["tier"], "high")
+        self.assertIn("architect", self.matrix["roles"])
+        self.assertEqual(self.matrix["roles"]["architect"]["tier"], "high")
 
     def test_expected_pins_cover_codex_roles(self) -> None:
         pins = self.promote.expected_pins(self.matrix)
@@ -191,7 +191,7 @@ class MatrixFixtureTests(unittest.TestCase):
     def test_sync_uses_matrix_tiers_for_roles(self) -> None:
         self.sync.clear_matrix_cache()
         self.assertEqual(
-            self.sync.grok_model("ignored", role="architecture"),
+            self.sync.grok_model("ignored", role="architect"),
             self.matrix["tiers"]["high"]["grok"],
         )
         self.assertEqual(

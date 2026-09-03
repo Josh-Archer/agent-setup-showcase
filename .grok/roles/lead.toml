@@ -2,4 +2,4 @@ description = "Use when orchestrating complex requests across agents and skills,
 default_capability_mode = "all"
 model = "grok-4.5"
 reasoning_effort = "medium"
-prompt_file = ".codex/agents/manager.agent.md"
+prompt_file = ".codex/agents/lead.agent.md"
