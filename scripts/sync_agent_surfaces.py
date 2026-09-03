@@ -149,15 +149,13 @@ def omp_models(
 
     if role in {"architect", "architecture"}:
         return [
-            "google-antigravity/gemini-3.8-flash:high",
-            "xai-oauth/grok-4.6:xhigh",
             "openai-codex/gpt-5.6-sol:high",
+            "xai-oauth/grok-4.6:xhigh",
         ]
     if role in {"lead", "manager"}:
         return [
-            "google-antigravity/gemini-3.8-flash:high",
-            "xai-oauth/grok-4.6:high",
             "openai-codex/gpt-5.6-sol:medium",
+            "xai-oauth/grok-4.6:high",
         ]
     if role in {"builder", "development"}:
         return [

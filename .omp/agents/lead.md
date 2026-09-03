@@ -2,9 +2,8 @@
 name: lead
 description: Use when orchestrating complex requests across agents and skills, keeping plans aligned and preventing drift.
 model:
-  - "google-antigravity/gemini-3.8-flash:high"
-  - "xai-oauth/grok-4.6:high"
   - "openai-codex/gpt-5.6-sol:medium"
+  - "xai-oauth/grok-4.6:high"
 tools:
   - read
   - grep

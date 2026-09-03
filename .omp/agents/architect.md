@@ -2,9 +2,8 @@
 name: architect
 description: Use when reviewing architecture and GitOps design choices at a high level, especially Kustomize overlays and Helm-rendered manifests.
 model:
-  - "google-antigravity/gemini-3.8-flash:high"
-  - "xai-oauth/grok-4.6:xhigh"
   - "openai-codex/gpt-5.6-sol:high"
+  - "xai-oauth/grok-4.6:xhigh"
 tools:
   - read
   - grep

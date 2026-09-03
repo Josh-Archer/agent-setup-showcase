@@ -68,8 +68,8 @@ class OmpHarnessContractTests(unittest.TestCase):
                     break
             self.assertGreaterEqual(
                 len(model_entries),
-                3,
-                f"{path} must define a multi-model fallback chain with at least 3 models, got {model_entries}",
+                2,
+                f"{path} must define a multi-model fallback chain with at least 2 models, got {model_entries}",
             )
 
 if __name__ == "__main__":
