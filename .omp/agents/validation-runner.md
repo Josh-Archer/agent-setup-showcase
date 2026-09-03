@@ -3,6 +3,9 @@ name: validation-runner
 description: Use when running Codex validation, environment setup, kustomize checks, or other focused repo validation workflows that benefit from a fast execution-oriented worker.
 model:
   - "claude-haiku-4-5-20251001"
+  - "google-antigravity/gemini-3.8-flash"
+  - "openai-codex/gpt-5.6-luna"
+  - "xai-oauth/grok-composer-2.5-fast"
 tools:
   - read
   - grep

@@ -199,7 +199,7 @@ class MatrixFixtureTests(unittest.TestCase):
             self.matrix["tiers"]["low"]["agy"],
         )
         self.assertEqual(
-            self.sync.agy_model("ignored", role="development"),
+            self.sync.agy_model("ignored", role="builder"),
             self.matrix["tiers"]["medium"]["agy"],
         )
 

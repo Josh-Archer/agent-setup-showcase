@@ -133,9 +133,69 @@ def agy_model(codex_model: str, role: str | None = None) -> str:
     return resolve_provider_model("agy", role=role, codex_model=codex_model)
 
 
+def omp_models(
+    codex_model: str,
+    role: str | None = None,
+    matrix: dict[str, Any] | None = None,
+) -> list[str]:
+    """
+    Return ordered multi-model fallback chain for OMP subagents across providers:
+    Claude pin -> Google Antigravity -> OpenAI Codex -> xAI Grok.
+    """
+    matrix = matrix if matrix is not None else load_matrix()
+    tier = role_tier_from_matrix(role, matrix) if role else None
+    if not tier:
+        tier = heuristic_tier(codex_model)
+
+    if role in {"builder", "development"}:
+        return [
+            "google-antigravity/gemini-3.8-flash:high",
+            "xai-oauth/grok-4.6:high",
+            "openai-codex/gpt-5.6-terra",
+        ]
+    if role == "junior":
+        return [
+            "google-antigravity/gemini-3.8-flash:medium",
+            "xai-oauth/grok-4.6:medium",
+            "openai-codex/gpt-5.6-luna",
+        ]
+
+    chain: list[str] = []
+
+    # 1. Claude pin
+    claude_pin = resolve_provider_model("omp", role=role, codex_model=codex_model, matrix=matrix)
+    if claude_pin:
+        chain.append(claude_pin)
+
+    # 2. Google Antigravity pin
+    if tier == "high":
+        chain.append("google-antigravity/claude-opus-4-6")
+    else:
+        chain.append("google-antigravity/gemini-3.8-flash")
+
+    # 3. OpenAI Codex pin
+    codex_id = codex_model
+    for suffix in ("-xhigh", "-high", "-medium", "-low"):
+        if codex_id.endswith(suffix):
+            codex_id = codex_id[: -len(suffix)]
+            break
+    chain.append(f"openai-codex/{codex_id}")
+
+    # 4. xAI Grok pin
+    grok_pin = resolve_provider_model("grok", role=role, codex_model=codex_model, matrix=matrix)
+    if grok_pin:
+        chain.append(f"xai-oauth/{grok_pin}")
+
+    # Deduplicate preserving order
+    dedup: list[str] = []
+    for m in chain:
+        if m and m not in dedup:
+            dedup.append(m)
+    return dedup
+
+
 def omp_model(codex_model: str, role: str | None = None) -> str:
     return resolve_provider_model("omp", role=role, codex_model=codex_model)
-
 
 def capability(tools: str) -> str:
     if "edit" in tools or "execute" in tools or "agent" in tools:
@@ -383,13 +443,15 @@ def write_surfaces(root: Path, *, prune: bool = False) -> tuple[int, list[Path]]
         )
         (agy_agent_dir / f"{name}.md").write_text(agy, encoding="utf-8")
 
+        omp_models_list = omp_models(model, role=name, matrix=matrix)
+        omp_models_yaml = "\n".join(f'  - "{m}"' for m in omp_models_list)
         omp_tools_yaml = "\n".join(f"  - {t}" for t in omp_tools(tools))
         omp_agent = (
             "---\n"
             f"name: {name}\n"
             f"description: {description}\n"
             f"model:\n"
-            f"  - \"{omp_pin}\"\n"
+            f"{omp_models_yaml}\n"
             f"tools:\n"
             f"{omp_tools_yaml}\n"
             "---\n\n"

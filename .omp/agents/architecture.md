@@ -3,6 +3,9 @@ name: architecture
 description: Use when reviewing architecture and GitOps design choices at a high level, especially Kustomize overlays and Helm-rendered manifests.
 model:
   - "claude-opus-4-6"
+  - "google-antigravity/claude-opus-4-6"
+  - "openai-codex/gpt-5.6-sol"
+  - "xai-oauth/grok-4.5"
 tools:
   - read
   - grep

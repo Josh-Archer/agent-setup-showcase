@@ -3,6 +3,9 @@ name: testing
 description: Use when running validation workflows, image checks, or CI-readiness checks and summarizing concrete pass or fail evidence.
 model:
   - "claude-sonnet-4-6"
+  - "google-antigravity/gemini-3.8-flash"
+  - "openai-codex/gpt-5.6-terra"
+  - "xai-oauth/grok-composer-2.5-fast"
 tools:
   - read
   - grep

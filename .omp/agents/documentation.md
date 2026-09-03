@@ -3,6 +3,9 @@ name: documentation
 description: Use when updating runbooks, guides, and operational notes that should stay accurate to current repo behavior.
 model:
   - "claude-sonnet-4-6"
+  - "google-antigravity/gemini-3.8-flash"
+  - "openai-codex/gpt-5.6-terra"
+  - "xai-oauth/grok-composer-2.5-fast"
 tools:
   - read
   - grep

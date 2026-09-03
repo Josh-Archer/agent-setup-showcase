@@ -3,6 +3,9 @@ name: product-development
 description: Use when translating feature requirements into manifest-driven implementation plans with rollout and validation criteria.
 model:
   - "claude-opus-4-6"
+  - "google-antigravity/claude-opus-4-6"
+  - "openai-codex/gpt-5.6-sol"
+  - "xai-oauth/grok-4.5"
 tools:
   - read
   - grep

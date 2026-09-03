@@ -3,6 +3,9 @@ name: docs-scribe
 description: Use when maintaining README and usage documentation for scripts, manifests, and GitOps workflows.
 model:
   - "claude-sonnet-4-6"
+  - "google-antigravity/gemini-3.8-flash"
+  - "openai-codex/gpt-5.6-luna"
+  - "xai-oauth/grok-composer-2.5-fast"
 tools:
   - read
   - grep

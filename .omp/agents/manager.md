@@ -3,6 +3,9 @@ name: manager
 description: Use when orchestrating complex requests across agents and skills, keeping plans aligned and preventing drift.
 model:
   - "claude-opus-4-6"
+  - "google-antigravity/claude-opus-4-6"
+  - "openai-codex/gpt-5.6-sol"
+  - "xai-oauth/grok-4.5"
 tools:
   - read
   - grep

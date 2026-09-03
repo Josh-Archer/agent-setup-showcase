@@ -89,6 +89,13 @@ install_agent_trees() {
       || { mkdir -p "$HOME/.omp/agent/skills"; cp -R "$REPO_ROOT/.omp/skills/." "$HOME/.omp/agent/skills/"; }
     log "synced OMP skills -> ~/.omp/agent/skills"
   fi
+  if [ -f "$REPO_ROOT/.omp/config.yml" ]; then
+    mkdir -p "$HOME/.omp/agent"
+    if [ ! -f "$HOME/.omp/agent/config.yml" ]; then
+      cp "$REPO_ROOT/.omp/config.yml" "$HOME/.omp/agent/config.yml"
+      log "initialized ~/.omp/agent/config.yml from repo"
+    fi
+  fi
 }
 
 install_shell_snippet() {

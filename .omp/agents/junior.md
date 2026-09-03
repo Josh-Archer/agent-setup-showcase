@@ -2,7 +2,9 @@
 name: junior
 description: Use when handling documentation, unit test scaffolding, or repetitive low-risk repo tasks that benefit from a fast parallel worker.
 model:
-  - "claude-sonnet-4-6"
+  - "google-antigravity/gemini-3.8-flash:medium"
+  - "xai-oauth/grok-4.6:medium"
+  - "openai-codex/gpt-5.6-luna"
 tools:
   - read
   - grep

@@ -49,13 +49,28 @@ class OmpHarnessContractTests(unittest.TestCase):
         }
         self.assertEqual(codex_roles, omp_agents)
 
-    def test_omp_agents_have_valid_frontmatter_and_tools(self) -> None:
+    def test_omp_agents_have_valid_frontmatter_tools_and_multi_model_fallback(self) -> None:
         for path in (ROOT / ".omp" / "agents").glob("*.md"):
             content = path.read_text(encoding="utf-8")
             self.assertTrue(content.startswith("---\n"), f"{path} must have YAML frontmatter")
             self.assertIn("tools:", content)
             self.assertIn("model:", content)
-
+            # Check that model list contains multiple providers for fallback
+            lines = content.splitlines()
+            model_indices = [i for i, line in enumerate(lines) if line.strip() == "model:"]
+            self.assertTrue(model_indices, f"{path} missing model: block")
+            m_idx = model_indices[0]
+            model_entries = []
+            for line in lines[m_idx + 1:]:
+                if line.startswith("  - "):
+                    model_entries.append(line.strip().strip('- "'))
+                else:
+                    break
+            self.assertGreaterEqual(
+                len(model_entries),
+                3,
+                f"{path} must define a multi-model fallback chain with at least 3 models, got {model_entries}",
+            )
 
 if __name__ == "__main__":
     unittest.main()

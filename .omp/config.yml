@@ -1,0 +1,9 @@
+modelRoles:
+  default: google-antigravity/gemini-3.8-flash:low
+symbolPreset: nerd
+composer:
+  shape: band
+theme:
+  dark: titanium
+setupVersion: 2
+hideThinkingBlock: true

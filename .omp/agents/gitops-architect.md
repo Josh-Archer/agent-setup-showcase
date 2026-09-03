@@ -3,6 +3,9 @@ name: gitops-architect
 description: Use when planning manifest-driven changes, Kustomize updates, and ArgoCD-safe rollout structure for this homelab repo.
 model:
   - "claude-opus-4-6"
+  - "google-antigravity/claude-opus-4-6"
+  - "openai-codex/gpt-5.6-sol"
+  - "xai-oauth/grok-4.5"
 tools:
   - read
   - grep

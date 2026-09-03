@@ -46,7 +46,7 @@ Antigravity does not auto-load root `AGENTS.md`. The plugin rule
 
 Names match `*.agent.md` basenames and the root role map:
 
-`architecture`, `development`, `devops`, `devops-subagent`, `documentation`,
+`architecture`, `builder`, `devops`, `devops-subagent`, `documentation`,
 `docs-scribe`, `debugger`, `manager`, `product-development`, `testing`,
 `gitops-architect`, `security-auditor`, `validation-runner`, `junior`, `qa`.
 

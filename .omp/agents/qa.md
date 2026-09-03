@@ -3,6 +3,9 @@ name: qa
 description: Use when you need end-to-end validation, requirement checks, and logical consistency reviews.
 model:
   - "claude-opus-4-6"
+  - "google-antigravity/claude-opus-4-6"
+  - "openai-codex/gpt-5.6-sol"
+  - "xai-oauth/grok-4.5"
 tools:
   - read
   - grep

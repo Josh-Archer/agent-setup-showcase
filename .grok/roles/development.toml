@@ -1,5 +1,0 @@
-description = "Use when working on local tooling, maintenance, and implementation workflows that should prefer existing scripts and manifest-driven changes."
-default_capability_mode = "all"
-model = "grok-composer-2.5-fast"
-reasoning_effort = "medium"
-prompt_file = ".codex/agents/development.agent.md"

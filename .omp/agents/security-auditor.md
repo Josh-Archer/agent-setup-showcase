@@ -3,6 +3,9 @@ name: security-auditor
 description: Use when reviewing diffs for security issues, unsafe scripts, or configuration drift.
 model:
   - "claude-opus-4-6"
+  - "google-antigravity/claude-opus-4-6"
+  - "openai-codex/gpt-5.6-sol"
+  - "xai-oauth/grok-4.5"
 tools:
   - read
   - grep

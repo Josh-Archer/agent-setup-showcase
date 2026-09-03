@@ -3,6 +3,9 @@ name: devops
 description: Use when owning CI/CD pipeline design, build optimization, and deployment reliability.
 model:
   - "claude-opus-4-6"
+  - "google-antigravity/claude-opus-4-6"
+  - "openai-codex/gpt-5.6-sol"
+  - "xai-oauth/grok-4.5"
 tools:
   - read
   - grep

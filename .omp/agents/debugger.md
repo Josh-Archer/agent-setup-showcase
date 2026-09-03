@@ -3,6 +3,9 @@ name: debugger
 description: Use when investigating bugs, discrepancies between implementation and docs, or unclear failures to determine the concrete root cause.
 model:
   - "claude-opus-4-6"
+  - "google-antigravity/claude-opus-4-6"
+  - "openai-codex/gpt-5.6-sol"
+  - "xai-oauth/grok-4.5"
 tools:
   - read
   - grep

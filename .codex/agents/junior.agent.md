@@ -1,6 +1,6 @@
 ---
 description: "Use when handling documentation, unit test scaffolding, or repetitive low-risk repo tasks that benefit from a fast parallel worker."
-model: "gpt-5.6-luna-high"
+model: "gpt-5.6-luna-xhigh"
 tools: [read, search, edit, execute]
 user-invocable: true
 ---
