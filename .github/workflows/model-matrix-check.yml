@@ -3,6 +3,7 @@ name: model-matrix-check
 on:
   pull_request:
     paths:
+      - ".github/workflows/**"
       - "models/**"
       - "scripts/promote_model_matrix.py"
       - "scripts/sync_agent_surfaces.py"
@@ -12,6 +13,8 @@ on:
       - ".gemini/agents/**"
       - ".grok/**"
       - ".agents/plugins/home-codex-agents/**"
+  push:
+    branches: [master, main]
   workflow_dispatch:
 
 jobs:

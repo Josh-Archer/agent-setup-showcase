@@ -223,7 +223,9 @@ runs on every pull request and push to `master`/`main`:
 1. `python scripts/sync_agent_surfaces.py --check` — fails on model-equivalence drift, missing role files, or content mismatch vs regenerated output from `.codex/agents`.
 2. `python -m unittest discover -s scripts/tests -v` — model mapping tiers and orchestrator dependency policy.
 
-Other workflows under `.github/workflows/` may be copied from the larger home monorepo and are not required for agent-surface integrity.
+Copied home workflows and supporting actions are inactive reference files under
+`.github/archived-homelab-workflows/`. Only the two agent validation workflows
+remain active; see [CI ownership](ci-ownership.md).
 
 ### Refreshing generated surfaces from source
 

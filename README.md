@@ -152,3 +152,9 @@ with separate efforts and compatibility aliases for older delegation commands.
 Install the generated personal Codex roles with
 `python3 scripts/setup_global_delegation.py --sync-codex-agents`.
 Open a new Codex task to load the updated configuration.
+
+## CI ownership
+
+Only agent validation workflows are active. Copied homelab workflows are kept
+as [inactive reference snapshots](.github/archived-homelab-workflows/README.md).
+See [CI ownership](docs/ci-ownership.md) for the validation contract and delegation trial.
