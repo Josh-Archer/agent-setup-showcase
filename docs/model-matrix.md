@@ -12,14 +12,14 @@ Antigravity (agy) model assignments in this repository.
 | `matrix_version` | Human/generation id (bump when promoting pins) |
 | `defaults` | Wrapper defaults when no named role is selected |
 | `tiers` | Equivalence tier → provider model pins (`high` / `medium` / `low`) |
-| `roles` | Codex role → `codex` model, `tier`, optional `claude` / `gemini` filenames |
+| `roles` | Codex role → optional `codex` override, `reasoning_effort`, `alias_of`, `tier`, optional `claude` / `gemini` filenames |
 | `extra_pins` | Surface-only agents or Claude/Gemini overrides that differ from the role tier |
 
 ### Surfaces
 
 | Surface | Path | How pins apply |
 |---------|------|----------------|
-| Codex | `.codex/agents/*.agent.md` | Exact `roles.*.codex` model string |
+| Codex | `.codex/agents/*.agent.md` | `roles.*.codex` override or `defaults.codex`, plus separate `reasoning_effort` |
 | Claude | `.claude/agents/*.md` | Role mapping + `extra_pins.claude` overrides |
 | Gemini | `.gemini/agents/*.md` | Role mapping + `extra_pins.gemini` |
 | Grok | `.grok/roles/*.toml`, `.grok/agents/*.md` | Regenerated from Codex + tier |
@@ -113,3 +113,7 @@ python -m unittest discover -s scripts/tests -v
 
 CI: `.github/workflows/model-matrix-check.yml` runs the check on pull requests
 that touch agent surfaces or the matrix.
+
+See [Astra agent policy](astra-agent-policy.md). `defaults.codex` owns the shared
+model ID; effort is a separate role field. Never append effort to the model ID.
+Native `.codex/agents/*.toml` files are generated, not hand-edited.

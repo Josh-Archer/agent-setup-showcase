@@ -1,4 +1,4 @@
-description = "Use when maintaining README and usage documentation for scripts, manifests, and GitOps workflows."
+description = "Compatibility alias for lead; prefer lead for new tasks."
 default_capability_mode = "all"
 model = "grok-composer-2.5-fast"
 reasoning_effort = "medium"

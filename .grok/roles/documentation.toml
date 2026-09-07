@@ -1,4 +1,4 @@
-description = "Use when updating runbooks, guides, and operational notes that should stay accurate to current repo behavior."
+description = "Compatibility alias for lead; prefer lead for new tasks."
 default_capability_mode = "all"
 model = "grok-composer-2.5-fast"
 reasoning_effort = "medium"

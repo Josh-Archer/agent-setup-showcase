@@ -171,13 +171,12 @@ Plans are loaded as JSON. Below is the schema structure and description:
 
 ## Provider Model Overrides
 
-Model selection is determined dynamically by the complexity of the requested agent role. Mappings are defined as follows:
-
-| Role Complexity Tier | Codex Model Class | Grok Equivalent | Antigravity Equivalent |
-| :--- | :--- | :--- | :--- |
-| **High / Reasoning** | `gpt-5.6-sol`, `gpt-5.6-sol-high`, `gpt-5.6-sol-xhigh`, `gpt-5.6-sol-medium` | `grok-4.5` | `Claude Opus 4.6 (Thinking)` |
-| **Medium / Fast** | `gpt-5.6-terra`, `gpt-5.6-terra-high`, `gpt-5.6-luna-high` | `grok-composer-2.5-fast` | `Gemini 3.5 Flash (Medium)` |
-| **Low / Spark** | `gpt-5.6-luna` | `grok-composer-2.5-fast` | `Gemini 3.5 Flash (Low)` |
+Codex defaults to `gpt-6-astra`; effort is configured separately by role.
+See [Astra agent policy](astra-agent-policy.md). Grok and Antigravity remain
+explicit provider alternatives using the existing tiers in
+[`models/matrix.json`](../models/matrix.json). Tier labels describe provider
+routing, not separate Codex capability classes. OMP defaults to Astra without
+automatically falling back to another model or provider.
 
 ### How to Override Models
 1. **At the CLI Level**: Pass the `--model` parameter to `.codex/skills/grok-agy-delegate/scripts/delegate.py`.

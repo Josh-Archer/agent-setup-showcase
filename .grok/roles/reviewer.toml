@@ -1,0 +1,5 @@
+description = "Independently review correctness, security, operational risks, and test gaps."
+default_capability_mode = "all"
+model = "grok-4.5"
+reasoning_effort = "high"
+prompt_file = ".codex/agents/reviewer.agent.md"

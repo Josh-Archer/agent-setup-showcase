@@ -124,9 +124,20 @@ def main() -> int:
     parser.add_argument("--shell-file", type=Path, default=default_shell)
     parser.add_argument("--sync-skills", action="store_true", help="Link all repository skills and exit")
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--sync-codex-agents", action="store_true", help="Link generated native Codex agents and exit")
     args = parser.parse_args()
 
     repo_root = args.repo_root.resolve()
+    if args.sync_codex_agents:
+        sources = sorted((repo_root / ".codex" / "agents").glob("*.toml"))
+        if not sources:
+            raise SystemExit("No native Codex agents; run scripts/sync_agent_surfaces.py first")
+        for source in sources:
+            destination = args.codex_home.expanduser() / "agents" / source.name
+            if destination.exists() and not destination.is_symlink():
+                raise SystemExit(f"Existing personal agent needs backup before replacement: {destination}")
+            install_link(source, destination, "Native Codex agent")
+        return 0
     if args.sync_skills:
         sync_skills(repo_root, args.codex_home.expanduser())
         return 0

@@ -1,5 +1,5 @@
-description = "Use when reviewing diffs for security issues, unsafe scripts, or configuration drift."
-default_capability_mode = "read-only"
+description = "Compatibility alias for reviewer; prefer reviewer for new tasks."
+default_capability_mode = "all"
 model = "grok-4.5"
-reasoning_effort = "medium"
+reasoning_effort = "high"
 prompt_file = ".codex/agents/security-auditor.agent.md"

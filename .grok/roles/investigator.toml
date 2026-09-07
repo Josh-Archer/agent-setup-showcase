@@ -1,0 +1,5 @@
+description = "Trace bugs, logs, code, and documentation to evidence-backed root causes."
+default_capability_mode = "all"
+model = "grok-4.5"
+reasoning_effort = "medium"
+prompt_file = ".codex/agents/investigator.agent.md"

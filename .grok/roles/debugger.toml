@@ -1,4 +1,4 @@
-description = "Use when investigating bugs, discrepancies between implementation and docs, or unclear failures to determine the concrete root cause."
+description = "Compatibility alias for investigator; prefer investigator for new tasks."
 default_capability_mode = "all"
 model = "grok-4.5"
 reasoning_effort = "medium"
