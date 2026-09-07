@@ -41,6 +41,8 @@ permissions:
 
 jobs:
   select-runner:
+    # Copied homelab runner routing is not used by agent-setup's hosted checks.
+    if: github.repository == 'Josh-Archer/home'
     uses: ./.github/workflows/runner-selector.yml
 
   resolve_build_runner:
@@ -142,6 +144,7 @@ jobs:
           echo "build_runner_description=${runner_description}" >> "$GITHUB_OUTPUT"
 
   resolve_remote_build_provider:
+    if: github.repository == 'Josh-Archer/home'
     uses: ./.github/workflows/remote-build-selector.yml
     secrets: inherit
 
