@@ -49,7 +49,7 @@ class OmpHarnessContractTests(unittest.TestCase):
         }
         self.assertEqual(codex_roles, omp_agents)
 
-    def test_omp_agents_have_valid_frontmatter_tools_and_multi_model_fallback(self) -> None:
+    def test_omp_agents_have_valid_frontmatter_tools_and_astra_default(self) -> None:
         for path in (ROOT / ".omp" / "agents").glob("*.md"):
             content = path.read_text(encoding="utf-8")
             self.assertTrue(content.startswith("---\n"), f"{path} must have YAML frontmatter")
@@ -66,11 +66,9 @@ class OmpHarnessContractTests(unittest.TestCase):
                     model_entries.append(line.strip().strip('- "'))
                 else:
                     break
-            self.assertGreaterEqual(
-                len(model_entries),
-                2,
-                f"{path} must define a multi-model fallback chain with at least 2 models, got {model_entries}",
-            )
+            self.assertEqual(len(model_entries), 1, "Provider alternatives require explicit selection")
+            self.assertRegex(model_entries[0], r"^openai-codex/gpt-6-astra:(low|medium|high)$")
+
 
 if __name__ == "__main__":
     unittest.main()

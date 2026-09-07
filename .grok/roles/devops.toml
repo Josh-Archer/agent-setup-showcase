@@ -1,4 +1,4 @@
-description = "Use when owning CI/CD pipeline design, build optimization, and deployment reliability."
+description = "Compatibility alias for lead; prefer lead for new tasks."
 default_capability_mode = "all"
 model = "grok-4.5"
 reasoning_effort = "medium"

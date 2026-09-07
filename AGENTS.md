@@ -89,23 +89,18 @@ All agents across all harnesses (Codex, Claude, Gemini/Antigravity, Grok, OMP, C
 
 Project agents are mapped across different provider surfaces. The canonical roles defined in this repository under `.codex/agents/` are mirrored into `.grok/agents/` and the Antigravity plugin under `.agents/plugins/home-codex-agents/`.
 
-| Role | Responsibility | Primary Model |
-| :--- | :--- | :--- |
-| **architect** | High-level structure and GitOps system design | `gpt-5.6-sol-high` / `grok-4.5` / `Claude Opus 4.6 (Thinking)` |
-| **builder** | Implementation, building, maintenance, and local tool execution | `gpt-5.6-terra-medium` / `grok-composer-2.5-fast` / `Gemini 3.5 Flash (Medium)` |
-| **devops** | CI/CD, deployment, and operational reliability | `gpt-5.6-sol` / `grok-4.5` / `Claude Opus 4.6 (Thinking)` |
-| **devops-subagent** | Focused CI/CD and deployment support | `gpt-5.6-sol` / `grok-4.5` / `Claude Opus 4.6 (Thinking)` |
-| **documentation** | Runbooks, guides, and deep technical reference docs | `gpt-5.6-terra` / `grok-composer-2.5-fast` / `Gemini 3.5 Flash (Medium)` |
-| **docs-scribe** | Lightweight README and usage-doc maintenance | `gpt-5.6-luna-high` / `grok-composer-2.5-fast` / `Gemini 3.5 Flash (Medium)` |
-| **debugger** | Bug isolation, root-cause analysis, and reproduction | `gpt-5.6-sol-medium` / `grok-4.5` / `Claude Opus 4.6 (Thinking)` |
-| **lead** | Orchestration, planning, and task handoff reconciliation | `gpt-5.6-sol-medium` / `grok-4.5` / `Claude Opus 4.6 (Thinking)` |
-| **product-development** | Requirement translation and release planning | `gpt-5.6-sol` / `grok-4.5` / `Claude Opus 4.6 (Thinking)` |
-| **testing** | Focused test execution and CI-readiness validation | `gpt-5.6-terra` / `grok-composer-2.5-fast` / `Gemini 3.5 Flash (Medium)` |
-| **gitops-architect** | ArgoCD manifest planning and infrastructure alignment | `gpt-5.6-sol-high` / `grok-4.5` / `Claude Opus 4.6 (Thinking)` |
-| **security-auditor** | Diff risk audits and configuration drift review | `gpt-5.6-sol` / `grok-4.5` / `Claude Opus 4.6 (Thinking)` |
-| **validation-runner** | Codex validation and environment verification | `gpt-5.6-luna` / `grok-composer-2.5-fast` / `Gemini 3.5 Flash (Low)` |
-| **junior** | Boilerplate generation, docs, and low-risk support | `gpt-5.6-luna-xhigh` / `grok-composer-2.5-fast` / `Gemini 3.5 Flash (Medium)` |
-| **qa** | End-to-end validation, requirement checks, and logical consistency | `gpt-5.6-sol-medium` / `grok-4.5` / `Claude Opus 4.6 (Thinking)` |
+Active Codex roles use `gpt-6-astra` with separate effort settings:
+
+| Role | Effort | Responsibility |
+| --- | --- | --- |
+| lead | medium | Requirements, implementation, integration, completion |
+| investigator | medium | Evidence gathering and root-cause diagnosis |
+| reviewer | high | Independent correctness, security, and operational review |
+| validation-runner | low | Prescribed checks and failure reporting |
+
+Follow [Astra agent policy](docs/astra-agent-policy.md). Old role names remain
+compatibility aliases for external commands. Domain specialization uses skills.
+Native Codex TOML agents are generated from the four active Markdown definitions.
 
 ---
 
@@ -178,7 +173,7 @@ Provider and model selection can be specified explicitly at the plan or task lev
 
 Promote a new generation with `python scripts/promote_model_matrix.py` after editing the matrix.
 
-Current tier pins (matrix_version `2026.07.1`):
+Current tier pins (matrix_version `2026.09.1`):
 
 - **High-Complexity Roles** (e.g., `architecture`, `debugger`):
   - Grok: `grok-4.5`
@@ -186,6 +181,6 @@ Current tier pins (matrix_version `2026.07.1`):
 - **Medium-Complexity Roles** (e.g., `development`, `testing`):
   - Grok: `grok-composer-2.5-fast`
   - Antigravity: `Gemini 3.5 Flash (Medium)`
-- **Low-Risk / Spark Roles** (e.g., `validation-runner`, `junior`):
+- **Low-Risk Validation Roles** (e.g., `validation-runner`, `junior`):
   - Grok: `grok-composer-2.5-fast`
   - Antigravity: `Gemini 3.5 Flash (Low)`

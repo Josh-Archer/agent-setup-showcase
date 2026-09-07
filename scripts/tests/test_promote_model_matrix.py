@@ -46,7 +46,7 @@ class MatrixFixtureTests(unittest.TestCase):
         codex = {path.name: model for surface, path, model in pins if surface == "codex"}
         for role, cfg in self.matrix["roles"].items():
             self.assertIn(f"{role}.agent.md", codex)
-            self.assertEqual(codex[f"{role}.agent.md"], cfg["codex"])
+            self.assertEqual(codex[f"{role}.agent.md"], cfg.get("codex") or self.matrix["defaults"]["codex"])
 
     def test_check_clean_on_repo(self) -> None:
         code = self.promote.check_matrix(self.matrix, root=ROOT)

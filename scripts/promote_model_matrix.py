@@ -90,7 +90,7 @@ def expected_pins(matrix: dict[str, Any]) -> list[tuple[str, Path, str]]:
     roles: dict[str, Any] = matrix["roles"]
 
     for role, cfg in sorted(roles.items()):
-        codex_model = str(cfg["codex"])
+        codex_model = str(cfg.get("codex") or matrix["defaults"]["codex"])
         tier = str(cfg["tier"])
         codex_path = CODEX_DIR / f"{role}.agent.md"
         pins.append(("codex", codex_path, codex_model))
@@ -184,6 +184,15 @@ def check_matrix(matrix: dict[str, Any] | None = None, root: Path = ROOT) -> int
                     f"{surface}: {rel} has model={actual!r}, expected {expected!r}"
                 )
 
+        for role, cfg in matrix["roles"].items():
+            if "reasoning_effort" not in cfg:
+                continue
+            path = CODEX_DIR / f"{role}.agent.md"
+            text = path.read_text(encoding="utf-8") if path.exists() else ""
+            match = re.search(r'^reasoning_effort: ["\']?([^"\'\n]+)', text, re.MULTILINE)
+            if not match or match.group(1) != cfg["reasoning_effort"]:
+                mismatches.append(f"codex: {role} reasoning effort differs from matrix")
+
         if mismatches:
             print("Model matrix drift detected:")
             for item in mismatches:
@@ -230,6 +239,20 @@ def promote(matrix: dict[str, Any] | None = None, root: Path = ROOT) -> int:
             if set_frontmatter_model(path, expected, quote=quote):
                 rel = path.relative_to(root) if path.is_relative_to(root) else path
                 print(f"updated {surface}: {rel} -> {expected}")
+                changed += 1
+
+        for role, cfg in matrix["roles"].items():
+            if "reasoning_effort" not in cfg:
+                continue
+            path = CODEX_DIR / f"{role}.agent.md"
+            text = path.read_text(encoding="utf-8")
+            line = f'reasoning_effort: "{cfg["reasoning_effort"]}"'
+            if re.search(r"^reasoning_effort:.*$", text, re.MULTILINE):
+                updated = re.sub(r"^reasoning_effort:.*$", line, text, count=1, flags=re.MULTILINE)
+            else:
+                updated = text.replace("\n---\n", "\n" + line + "\n---\n", 1)
+            if updated != text:
+                path.write_text(updated, encoding="utf-8")
                 changed += 1
 
         # Regenerate Grok + Antigravity from Codex + matrix tiers.

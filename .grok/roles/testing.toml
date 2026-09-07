@@ -1,5 +1,5 @@
-description = "Use when running validation workflows, image checks, or CI-readiness checks and summarizing concrete pass or fail evidence."
+description = "Compatibility alias for validation-runner; prefer validation-runner for new tasks."
 default_capability_mode = "all"
 model = "grok-composer-2.5-fast"
-reasoning_effort = "medium"
+reasoning_effort = "low"
 prompt_file = ".codex/agents/testing.agent.md"

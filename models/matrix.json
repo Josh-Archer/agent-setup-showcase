@@ -1,10 +1,11 @@
 {
   "schema_version": 1,
-  "matrix_version": "2026.07.1",
+  "matrix_version": "2026.09.1",
   "description": "Canonical versioned model pins for Codex, Claude, Gemini, Grok, and Antigravity agent surfaces.",
   "defaults": {
     "grok": "grok-4.5",
-    "agy": "Gemini 3.5 Flash (Medium)"
+    "agy": "Gemini 3.5 Flash (Medium)",
+    "codex": "gpt-6-astra"
   },
   "tiers": {
     "high": {
@@ -28,85 +29,106 @@
   },
   "roles": {
     "architect": {
-      "codex": "gpt-5.6-sol-high",
       "tier": "high",
       "claude": "architecture",
-      "gemini": "architect"
+      "gemini": "architect",
+      "reasoning_effort": "medium",
+      "alias_of": "lead"
     },
     "debugger": {
-      "codex": "gpt-5.6-sol-medium",
       "tier": "high",
       "claude": "debugger",
-      "gemini": "debugger"
+      "gemini": "debugger",
+      "reasoning_effort": "medium",
+      "alias_of": "investigator"
     },
     "builder": {
-      "codex": "gpt-5.6-terra-medium",
       "tier": "medium",
-      "claude": "development"
+      "claude": "development",
+      "reasoning_effort": "medium",
+      "alias_of": "lead"
     },
     "devops": {
-      "codex": "gpt-5.6-sol",
       "tier": "high",
       "claude": "devops",
-      "gemini": "devops"
+      "gemini": "devops",
+      "reasoning_effort": "medium",
+      "alias_of": "lead"
     },
     "devops-subagent": {
-      "codex": "gpt-5.6-sol",
-      "tier": "high"
+      "tier": "high",
+      "reasoning_effort": "medium",
+      "alias_of": "lead"
     },
     "docs-scribe": {
-      "codex": "gpt-5.6-luna-high",
       "tier": "medium",
       "claude": "docs-scribe",
-      "gemini": "docs-scribe"
+      "gemini": "docs-scribe",
+      "reasoning_effort": "medium",
+      "alias_of": "lead"
     },
     "documentation": {
-      "codex": "gpt-5.6-terra",
       "tier": "medium",
-      "claude": "documentation"
+      "claude": "documentation",
+      "reasoning_effort": "medium",
+      "alias_of": "lead"
     },
     "gitops-architect": {
-      "codex": "gpt-5.6-sol-high",
       "tier": "high",
       "claude": "gitops-architect",
-      "gemini": "gitops-architect"
+      "gemini": "gitops-architect",
+      "reasoning_effort": "medium",
+      "alias_of": "lead"
     },
     "junior": {
-      "codex": "gpt-5.6-luna-xhigh",
       "tier": "medium",
-      "gemini": "junior"
+      "gemini": "junior",
+      "reasoning_effort": "medium",
+      "alias_of": "lead"
     },
     "lead": {
-      "codex": "gpt-5.6-sol-medium",
       "tier": "high",
       "claude": "manager",
-      "gemini": "manager"
+      "gemini": "manager",
+      "reasoning_effort": "medium"
     },
     "product-development": {
-      "codex": "gpt-5.6-sol",
       "tier": "high",
-      "claude": "product-development"
+      "claude": "product-development",
+      "reasoning_effort": "medium",
+      "alias_of": "lead"
     },
     "qa": {
-      "codex": "gpt-5.6-sol-medium",
-      "tier": "high"
+      "tier": "high",
+      "reasoning_effort": "high",
+      "alias_of": "reviewer"
     },
     "security-auditor": {
-      "codex": "gpt-5.6-sol",
       "tier": "high",
       "claude": "security-auditor",
-      "gemini": "security-auditor"
+      "gemini": "security-auditor",
+      "reasoning_effort": "high",
+      "alias_of": "reviewer"
     },
     "testing": {
-      "codex": "gpt-5.6-terra",
       "tier": "medium",
-      "claude": "testing"
+      "claude": "testing",
+      "reasoning_effort": "low",
+      "alias_of": "validation-runner"
     },
     "validation-runner": {
-      "codex": "gpt-5.6-luna",
       "tier": "low",
       "claude": "validation-runner",
-      "gemini": "validation-runner"
+      "gemini": "validation-runner",
+      "reasoning_effort": "low"
+    },
+    "investigator": {
+      "tier": "high",
+      "reasoning_effort": "medium"
+    },
+    "reviewer": {
+      "tier": "high",
+      "reasoning_effort": "high"
     }
   },
   "extra_pins": {

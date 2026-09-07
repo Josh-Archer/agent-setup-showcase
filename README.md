@@ -143,3 +143,12 @@ re-exporting this showcase):
 3. Run `python3 scripts/sync_agent_surfaces.py` so Grok/agy surfaces match.
 4. Re-run setup scripts (`scripts/setup_agents.ps1` / `scripts/setup_agents.sh`)
    on machines that install into `~/.codex`, `~/.claude`, etc.
+
+## Astra agent defaults
+
+See [Astra agent policy](docs/astra-agent-policy.md): four active roles on Astra,
+with separate efforts and compatibility aliases for older delegation commands.
+
+Install the generated personal Codex roles with
+`python3 scripts/setup_global_delegation.py --sync-codex-agents`.
+Open a new Codex task to load the updated configuration.

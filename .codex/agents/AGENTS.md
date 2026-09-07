@@ -44,11 +44,10 @@ Antigravity does not auto-load root `AGENTS.md`. The plugin rule
 
 ## Canonical roles
 
-Names match `*.agent.md` basenames and the root role map:
-
-`architect`, `builder`, `devops`, `devops-subagent`, `documentation`,
-`docs-scribe`, `debugger`, `lead`, `product-development`, `testing`,
-`gitops-architect`, `security-auditor`, `validation-runner`, `junior`, `qa`.
+Active native roles: `lead`, `investigator`, `reviewer`, `validation-runner`.
+Other Markdown names are compatibility aliases. See
+[the agent policy](../../docs/astra-agent-policy.md). Native TOML files are generated
+by `scripts/sync_agent_surfaces.py` from the four active Markdown definitions.
 
 ## External delegation
 
