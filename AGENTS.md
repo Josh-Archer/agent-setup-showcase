@@ -80,6 +80,10 @@ All agents across all harnesses (Codex, Claude, Gemini/Antigravity, Grok, OMP, C
 
 ## Agent Workflow
 
+- **CI ownership:** Only agent validation workflows are active; see
+  [CI ownership](docs/ci-ownership.md). Homelab workflow snapshots belong under
+  `.github/archived-homelab-workflows/` and must not be restored wholesale.
+
 - **PR CI Enforcement Hook:** When opening a PR, always wait for the GitHub Actions CI checks to pass (e.g., using `gh pr checks <id> --watch`) before finishing your task. If the checks fail, investigate the logs, push a fix, and verify it passes.
 - **Commit Signing Workflow:** Ensure Git GPG/SSH commit signing is configured and uses the default global signing key (e.g., from Bitwarden/ssh-agent). Make sure your SSH agent/vault is unlocked when tasks are running so commits can be signed successfully without blocking.
 

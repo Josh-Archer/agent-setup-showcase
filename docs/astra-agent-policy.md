@@ -39,6 +39,6 @@ uses the four roles above. Cross-provider pins remain explicit opt-in alternativ
 Sources: [Astra guidance](https://developers.openai.com/api/docs/guides/latest-model)
 and [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents).
 
-The copied `test-pr.yml` routes homelab runners only in `Josh-Archer/home`.
-Agent-setup uses its GitHub-hosted checks, including the dedicated matrix and
-surface-drift workflows; it has no registered homelab runners.
+Copied homelab workflows are inactive snapshots under
+`.github/archived-homelab-workflows/`. Agent-setup runs only its hosted matrix and
+surface-drift checks. See [CI ownership](ci-ownership.md).
